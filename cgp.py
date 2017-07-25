@@ -1,13 +1,11 @@
 import operator
+import inspect
 
 class Primitive():
-    def __init__(self, name, function   ):
+    def __init__(self, name, function, arity):
         self.name = name
         self.function = function
-
-    @property
-    def arity(self):
-        return self.function.__code__.co_argcount
+        self.arity = arity
 
 
 class Terminal():
@@ -34,25 +32,23 @@ class PrimitiveSet():
         return [p for p in self.primitives if not p.arity]
 
 
-add = Primitive("add", operator.add)
-sub = Primitive("sub", operator.sub)
-mul = Primitive("mul", operator.mul)
-div = Primitive("div", operator.truediv)
+add = Primitive("add", operator.add, 2)
+sub = Primitive("sub", operator.sub, 2)
+mul = Primitive("mul", operator.mul, 2)
+div = Primitive("div", operator.truediv, 2)
 
 x = Terminal("x")
 c = Constant("c")
 
 pset = PrimitiveSet([add, sub, mul, div, x , c])
 
-print(pset.terminals)
-exit()
 
 from itertools import islice, chain
 from toolz import last
 
 
 class Cartesian():
-    primitives = primitives
+    primitives = pset
 
     def __getitem__(self, i):
         return last(islice(chain.from_iterable([self.inputs, *self.rows, self.outputs]), i+1))
@@ -62,7 +58,7 @@ class Cartesian():
 
 
 def to_polish(c, return_args=True):
-    primitives = c.primitives
+    primitives = c.primitives.memory
 
     used_arguments = set()
 
@@ -86,12 +82,12 @@ def to_polish(c, return_args=True):
 
 
 def boilerplate(c, used_arguments=()):
-    primitives = c.primitives
+    primitives = c.primitives.memory
     if used_arguments:
         index = sorted([k for (k, v) in primitives.items() if v in used_arguments])
         args = (primitives.get(i) for i in index)
     else:
-        args = (c.primitives[int(i)] for i in c.inputs)
+        args = (primitives[int(i)] for i in c.inputs)
     return "lambda " + ", ".join(args) + ": "
 
 
