@@ -18,14 +18,9 @@ class Primitive(object):
 
 class Constant(Primitive):
     arity = 0
-    def __init__(self, name, function=None):
+    def __init__(self, name):
         self.name = name
-        self.function = function
 
-
-# class ERC(Primitive):
-#     arity = 0
-#
 
 class Terminal(Primitive):
     arity = 0
@@ -175,7 +170,7 @@ def to_polish(c, return_args=True):
         primitive = primitives[next(gene)]
 
         if primitive.arity == 0:
-            if isinstance(primitive, Terminal):
+            if isinstance(primitive, (Constant, Terminal)):
                 used_arguments.add(primitive)
             return primitive.name
         else:
@@ -202,7 +197,10 @@ def boilerplate(c, used_arguments=()):
 
 
 def compile(c):
-    polish = to_polish(c, return_args=False)
-    bp = boilerplate(c)
+    polish, args = to_polish(c, return_args=True)
+    for t in c.pset.terminals:
+        if isinstance(t, Terminal):
+            args.add(t)
+    bp = boilerplate(c, used_arguments=args)
     code = "({})".format(", ".join(polish)) if len(polish) > 1 else polish[0]
     return eval(bp + code, c.pset.context)

@@ -13,12 +13,13 @@ def oneplus(fun, pset, n_columns, n_rows, n_back, n_out, random_state=None, lamb
     fitness = fun(best)
 
     if fitness <= f_tol:
-        return best
+        return best, fitness
+
     for i in range(max_iter):
         offspring = [point_mutation(best, random_state=random_state) for _ in range(lambda_)]
         offspring_fitness = [fun(o) for o in offspring]
-
         best, fitness = min(zip(offspring + [best], offspring_fitness + [fitness]), key=itemgetter(1))
         if fitness <= f_tol:
-            return best
-    return best
+            return best, fitness
+
+    return best, fitness

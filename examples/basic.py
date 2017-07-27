@@ -12,7 +12,7 @@ primitives = [
 ]
 
 pset = create_pset(primitives)
-rng = check_random_state(None)
+rng = check_random_state(42)
 
 x = rng.normal(size=(100, 2))
 y = x[:, 1] * x[:, 1] + x[:, 0]
@@ -22,6 +22,6 @@ def func(individual):
     yhat = individual.fit_transform(x)
     return np.sqrt(np.mean((y - yhat)**2))
 
-res = oneplus(func, pset, 2, 2, 2, 1, f_tol=0.1, random_state=rng, max_iter=10000)
-print(res)
+res, fitness = oneplus(func, pset, 2, 2, 2, 1, f_tol=0.1, random_state=rng, max_iter=10000)
+print(res, fitness)
 print(to_polish(res, return_args=False))
