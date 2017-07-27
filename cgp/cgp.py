@@ -23,9 +23,9 @@ class Constant(Primitive):
         self.function = function
 
 
-class ERC(Primitive):
-    arity = 0
-
+# class ERC(Primitive):
+#     arity = 0
+#
 
 class Terminal(Primitive):
     arity = 0
@@ -56,9 +56,9 @@ def create_pset(primitives):
 
 def _make_map(*lists):
     i = 0
-    for l in lists:
-        for j, el in enumerate(l):
-            yield i, el, j, l
+    for c, l in enumerate(lists):
+        for r, el in enumerate(l):
+            yield i, el, c, r, l
             i += 1
 
 class Base(TransformerMixin):
@@ -72,14 +72,14 @@ class Base(TransformerMixin):
 
     @property
     def map(self):
-        return {i: (el, j, l) for i, el, j, l in _make_map(self.inputs, *self.code, self.outputs)}
+        return {i: (el, c, r, l) for i, el, c, r, l in _make_map(self.inputs, *self.code, self.outputs)}
 
     def __getitem__(self, index):
         return self.map[index][0]
 
     def __setitem__(self, index, item):
-        el, j, l = self.map[index]
-        l[j] = item
+        el, c, r, l = self.map[index]
+        l[r] = item
 
     def __len__(self):
         return max(self.map) + 1
@@ -96,7 +96,7 @@ class Base(TransformerMixin):
         return self._transform(*x.T)
 
     @classmethod
-    def create(cls, n_in, n_columns, n_rows, n_back, n_out, random_state=None):
+    def create(cls, n_columns, n_rows, n_back, n_out, random_state=None):
         random_state = check_random_state(random_state)
 
         operator_keys = list(range(len(cls.pset.terminals), max(cls.pset.mapping) + 1))
@@ -110,7 +110,7 @@ class Base(TransformerMixin):
                 gene = [random_state.choice(operator_keys)] + [random_state.choice(in_) for _ in range(cls.pset.max_arity)]
                 column.append(gene)
             code.append(column)
-        outputs = [[random_state.randint(0, n_columns*n_rows + n_in)] for _ in range(n_out)]
+        outputs = [random_state.randint(0, n_columns*n_rows + len(cls.pset.terminals)) for _ in range(n_out)]
         return cls(code, outputs, n_back)
 
     def __getstate__(self):
@@ -124,23 +124,23 @@ class Base(TransformerMixin):
 def point_mutation(individual, random_state=None):
     random_state = check_random_state(random_state)
     n_terminals = len(individual.pset.terminals)
-    i = random_state.randint(n_terminals, len(individual) )
-    gene = individual[i]
+    i = random_state.randint(n_terminals, len(individual))
+    el, c, r, l = individual.map[i]
+    gene = l[r]
     if isinstance(gene, list):
         new_gene = gene[:]
         j = random_state.randint(0, len(gene))
         if j == 0: # function
             new_j = individual.pset.imapping[random_state.choice(individual.pset.operators)]
         else:      # input
-            min_input = max(0, (i-individual.n_back)*individual.n_rows) + n_terminals
-            max_input = i * individual.n_rows - 1 + n_terminals
+            min_input = max(0, (c - 1 - individual.n_back)*individual.n_rows + n_terminals)
+            max_input = max(0, (c - 1) * individual.n_rows - 1 + n_terminals)
             in_ = list(range(min_input, max_input)) + list(range(n_terminals))
             new_j = random_state.choice(in_)
         new_gene[j] = new_j
 
     else: # output gene
         new_gene = random_state.randint(0, individual.n_columns*individual.n_rows + len(individual.inputs))
-
     new_individual = copy.deepcopy(individual)
     new_individual[i] = new_gene
     return new_individual
