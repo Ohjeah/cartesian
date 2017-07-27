@@ -1,2 +1,1 @@
-attrs
-scikit-learn
+scikit-learn[alldeps]

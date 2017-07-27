@@ -1,8 +1,8 @@
+import os
+import sys
 from setuptools import setup
 
-here = os.path.abspath(dirname(__file__))
-
-with open('README.rst') as f:
+with open('README.md') as f:
     long_description = '\n' + f.read()
 
 with open("requirements.txt", "r") as f:
