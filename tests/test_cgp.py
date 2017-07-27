@@ -19,7 +19,7 @@ def individual(request):
     MyCartesian = type("MyCartesian", (Base, ), {"pset": pset})
     code = [[[2, 0]]]
     outputs = [2]
-    return MyCartesian(code, outputs)
+    return MyCartesian(code, outputs, 1)
 
 
 def test_PrimitiveSet(pset):
@@ -33,14 +33,17 @@ def test_Cartesian(individual):
     y = individual.fit_transform(x)
     assert y == np.array([-1])
 
+
 def test_Cartesian_get(individual):
     assert individual[0] == 0
     assert individual[1] == 1
+
 
 def test_Cartesian_set(individual):
     n = len(individual)
     individual[n-1] = 1
     assert individual.outputs[0] == 1
+
 
 def test_to_polish(individual):
     polish, used_arguments = to_polish(individual)
@@ -56,3 +59,22 @@ def test_boilerplate(individual):
 def test_compile(individual):
     f = compile(individual)
     assert f(1, 1) == -1
+
+
+def test_point_mutation(individual):
+    new_individual = point_mutation(individual)
+
+    assert new_individual.inputs is not individual.inputs
+    assert new_individual.inputs == individual.inputs
+    assert new_individual.code is not individual.code
+    assert new_individual.outputs is not individual.outputs
+
+    changes = 0
+    if new_individual.outputs != individual.outputs:
+        changes += 1
+    for c1, c2 in zip(individual.code, new_individual.code):
+        for c11, c22 in zip(c1, c2):
+            if c11 != c22:
+                changes += 1
+
+    assert 0 <= changes <= 1

@@ -1,4 +1,5 @@
 import itertools
+import copy
 from operator import attrgetter
 from collections import namedtuple
 
@@ -32,7 +33,7 @@ class Terminal(Primitive):
         self.name = name
 
 
-PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping context")
+PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping imapping context")
 
 
 def create_pset(primitives):
@@ -47,9 +48,10 @@ def create_pset(primitives):
     mapping = {i: prim for i, prim in enumerate(sorted(terminals, key=attrgetter("name")) \
                                               + sorted(operators, key=attrgetter("name")))}
 
+    imapping = inv_map = {v: k for k, v in mapping.items()}
     context = {f.name: f.function for f in operators}
 
-    return PrimitiveSet(operators=operators, terminals=terminals,
+    return PrimitiveSet(operators=operators, terminals=terminals, imapping=imapping,
                         max_arity=max_arity, mapping=mapping, context=context)
 
 def _make_map(*lists):
@@ -60,10 +62,13 @@ def _make_map(*lists):
             i += 1
 
 class Base(TransformerMixin):
-    def __init__(self, code, outputs):
+    def __init__(self, code, outputs, n_back):
         self.inputs = list(range(len(self.pset.terminals)))
         self.code = code
         self.outputs = outputs
+        self.n_back = n_back
+        self.n_columns = len(code)
+        self.n_rows = len(code[0])
 
     @property
     def map(self):
@@ -78,6 +83,9 @@ class Base(TransformerMixin):
 
     def __len__(self):
         return max(self.map) + 1
+
+    def __repr__(self):
+        return "in: {}\ncode: {}\nout: {}".format(self.inputs, self.code, self.outputs)
 
     def fit(self, x, y=None, **fit_params):
         self._transform = compile(self)
@@ -102,19 +110,40 @@ class Base(TransformerMixin):
                 gene = [random_state.choice(operator_keys)] + [random_state.choice(in_) for _ in range(cls.pset.max_arity)]
                 column.append(gene)
             code.append(column)
-        outputs = [random_state.randint(0, n_columns*n_rows + n_in) for _ in range(n_out)]
-        return cls(code, outputs)
+        outputs = [[random_state.randint(0, n_columns*n_rows + n_in)] for _ in range(n_out)]
+        return cls(code, outputs, n_back)
 
     def __getstate__(self):
         state = dict(self.__dict__)
-        del state["_transform"]
+        try:
+            del state["_transform"]
+        except KeyError:
+            pass
         return state
 
 def point_mutation(individual, random_state=None):
     random_state = check_random_state(random_state)
+    n_terminals = len(individual.pset.terminals)
+    i = random_state.randint(n_terminals, len(individual) )
+    gene = individual[i]
+    if isinstance(gene, list):
+        new_gene = gene[:]
+        j = random_state.randint(0, len(gene))
+        if j == 0: # function
+            new_j = individual.pset.imapping[random_state.choice(individual.pset.operators)]
+        else:      # input
+            min_input = max(0, (i-individual.n_back)*individual.n_rows) + n_terminals
+            max_input = i * individual.n_rows - 1 + n_terminals
+            in_ = list(range(min_input, max_input)) + list(range(n_terminals))
+            new_j = random_state.choice(in_)
+        new_gene[j] = new_j
 
-    i = random_state.randint(len(individual.pset.terminals), len(individual))
-    gene
+    else: # output gene
+        new_gene = random_state.randint(0, individual.n_columns*individual.n_rows + len(individual.inputs))
+
+    new_individual = copy.deepcopy(individual)
+    new_individual[i] = new_gene
+    return new_individual
 
 # class Cartesian(type):
 #     def __new__(mcs, name, primitive_set):
