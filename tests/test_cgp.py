@@ -69,4 +69,3 @@ def test_Cartesian_pickle(individual):
     pickled = pickle.loads(pickle.dumps(individual))
     for k in individual.__dict__.keys():
         assert pickled.__dict__[k] == individual.__dict__[k]
-    assert False
