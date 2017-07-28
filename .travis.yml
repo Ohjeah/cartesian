@@ -10,7 +10,7 @@ install:
   - pip install pytest pytest-cov
 
 script:
-  - py.test --cov=./
+  - py.test --cov=cartesian
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
