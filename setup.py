@@ -8,6 +8,10 @@ with open('README.md') as f:
 with open("requirements.txt", "r") as f:
     required = f.readlines()
 
+if sys.argv[-1] == "publish":
+    os.system("python setup.py sdist bdist_wheel upload")
+    sys.exit()
+
 setup(
     name='cartesian',
     version="0.0.0",
@@ -25,7 +29,3 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
 )
-
-if sys.argv[-1] == "publish":
-    os.system("python setup.py sdist bdist_wheel upload")
-    sys.exit()

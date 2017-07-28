@@ -1,4 +1,4 @@
-# cartesian
+# cartesian [![PyPI](https://img.shields.io/pypi/v/cartesian.svg)](https://pypi.python.org/pypi/cartesian)
 ---
 
 cartesian is a lightweight implementation of Cartesian genetic programming with symbolic regression in mind.
