@@ -1,5 +1,6 @@
 import itertools
 import copy
+import sys
 from operator import attrgetter
 from collections import namedtuple
 
@@ -141,8 +142,12 @@ def point_mutation(individual, random_state=None):
 
 class Cartesian(type):
     def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
+        current_module = sys.modules[__name__]
         dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
-        return super().__new__(mcs, name, (Base, ), dct)
+        cls = super().__new__(mcs, name, (Base, ), dct)
+        setattr(current_module, name, cls)
+        return cls
+
 
     def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
         dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
