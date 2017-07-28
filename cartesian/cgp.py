@@ -50,12 +50,14 @@ def create_pset(primitives):
     return PrimitiveSet(operators=operators, terminals=terminals, imapping=imapping,
                         max_arity=max_arity, mapping=mapping, context=context)
 
+
 def _make_map(*lists):
     i = 0
     for c, l in enumerate(lists):
         for r, el in enumerate(l):
             yield i, el, c, r, l
             i += 1
+
 
 class Base(TransformerMixin):
     def __init__(self, code, outputs):
@@ -115,6 +117,21 @@ class Base(TransformerMixin):
             pass
         return state
 
+
+class Cartesian(type):
+    def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
+        current_module = sys.modules[__name__]
+        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
+        cls = super().__new__(mcs, name, (Base, ), dct)
+        setattr(current_module, name, cls)
+        return cls
+
+
+    def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
+        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
+        return super().__init__(name, (Base, ), dct)
+
+
 def point_mutation(individual, random_state=None):
     random_state = check_random_state(random_state)
     n_terminals = len(individual.pset.terminals)
@@ -138,20 +155,6 @@ def point_mutation(individual, random_state=None):
     new_individual = copy.deepcopy(individual)
     new_individual[i] = new_gene
     return new_individual
-
-
-class Cartesian(type):
-    def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        current_module = sys.modules[__name__]
-        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
-        cls = super().__new__(mcs, name, (Base, ), dct)
-        setattr(current_module, name, cls)
-        return cls
-
-
-    def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
-        return super().__init__(name, (Base, ), dct)
 
 
 def to_polish(c, return_args=True):
