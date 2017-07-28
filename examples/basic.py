@@ -25,6 +25,6 @@ def func(individual):
 
 Cartesian = type("Cartesian", (Base, ), dict(pset=pset))
 
-res = oneplus(func, Cartesian, 2, 2, 2, 1, f_tol=0.1, random_state=rng, max_iter=10000, n_jobs=1)
+res = oneplus(func, 2, 2, 2, 1, f_tol=0.1, cls=Cartesian, random_state=rng, max_iter=10000, n_jobs=1)
 print(res)
 print(to_polish(res.expr, return_args=False))

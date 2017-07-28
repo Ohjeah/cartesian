@@ -3,7 +3,7 @@ from sklearn.utils.validation import check_random_state
 from scipy.optimize import minimize, OptimizeResult
 
 from cartesian.algorithm import oneplus
-from cartesian.cgp import create_pset, Terminal, Primitive, to_polish, compile, Constant, Base
+from cartesian.cgp import *
 
 primitives = [
     Primitive("add", np.add, 2),
@@ -38,7 +38,7 @@ def func(individual):
 
 Cartesian = type("Cartesian", (Base, ), dict(pset=pset))
 
-success = sum(oneplus(func, Cartesian, 15, 1, 2, 1, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=1).success
+success = sum(oneplus(func, 15, 1, 2, 1, cls=Cartesian, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=1).success
               for _ in range(30))/30.0
 
 print(success)
