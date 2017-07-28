@@ -3,7 +3,7 @@ import operator
 import numpy as np
 import pytest
 
-from cgp.cgp import *
+from cartesian.cgp import *
 
 
 @pytest.fixture()

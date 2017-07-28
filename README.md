@@ -1,7 +1,7 @@
-# cgp.py
+# cartesian
 ---
 
-cgp.py is a lightweight implementation of Cartesian genetic programming with symbolic regression in mind.
+cartesian is a lightweight implementation of Cartesian genetic programming with symbolic regression in mind.
 
 It is meant to be used in conjunction with [deap](https://github.com/DEAP/deap) or [glyph](https://github.com/Ambrosys/glyph).
 

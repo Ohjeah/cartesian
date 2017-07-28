@@ -9,14 +9,14 @@ with open("requirements.txt", "r") as f:
     required = f.readlines()
 
 setup(
-    name='cgp',
+    name='cartesian',
     version="0.0.0",
     description='Minimal cartesian genetic programming for symbolic regression.',
     long_description=long_description,
     author='Markus Quade',
     author_email='info@markusqua.de',
-    url='https://github.com/ohjeah/cgp.py',
-    packages=['cgp'],
+    url='https://github.com/ohjeah/cartesian',
+    packages=['cartesian'],
     install_requires=required,
     license='MIT',
     classifiers=[

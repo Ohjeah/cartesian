@@ -1,6 +1,6 @@
 import collections
 
-from cgp.util import *
+from cartesian.util import *
 
 
 def test_make_it():

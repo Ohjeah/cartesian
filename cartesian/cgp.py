@@ -6,7 +6,7 @@ from collections import namedtuple
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_random_state
 
-from cgp.util import make_it
+from cartesian.util import make_it
 
 
 class Primitive(object):
@@ -80,7 +80,8 @@ class Base(TransformerMixin):
         return max(self.map) + 1
 
     def __repr__(self):
-        return "in: {}\ncode: {}\nout: {}".format(self.inputs, self.code, self.outputs)
+        #return "in: {}\ncode: {}\nout: {}".format(self.inputs, self.code, self.outputs)
+        return "\n".join(to_polish(self, return_args=False))
 
     def fit(self, x, y=None, **fit_params):
         self._transform = compile(self)
