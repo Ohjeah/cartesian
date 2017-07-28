@@ -15,15 +15,15 @@ def return_opt_result(f, individual):
     return res
 
 
-def oneplus(fun, n_columns, n_rows, n_back, n_out, random_state=None, cls=None,
-            lambda_=4, max_iter=100, max_nfev=None, f_tol=0, n_jobs=1, seed=None):
+def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
+            max_nfev=None, f_tol=0, n_jobs=1, seed=None):
 
     max_iter = max_nfev if max_nfev else max_iter
     max_nfev = max_nfev or math.inf
 
     random_state = check_random_state(random_state)
 
-    best = seed or cls.create(n_columns, n_rows, n_back, n_out, random_state=random_state)
+    best = seed or cls.create(random_state=random_state)
     best_res = return_opt_result(fun, best)
 
     nfev = best_res.nfev

@@ -16,7 +16,7 @@ def pset():
 @pytest.fixture(params=[pset])
 def individual(request):
     pset = request.param()
-    MyCartesian = type("MyCartesian", (Base, ), {"pset": pset})
+    MyCartesian = Cartesian("MyCartesian", pset, n_columns=1)
     code = [[[2, 0]]]
     outputs = [2]
-    return MyCartesian(code, outputs, 1)
+    return MyCartesian(code, outputs)

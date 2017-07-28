@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.utils.validation import check_random_state
 
 from cartesian.algorithm import oneplus
-from cartesian.cgp import create_pset, Terminal, Primitive, to_polish, Base
+from cartesian.cgp import *
 
 primitives = [
     Primitive("add", np.add, 2),
@@ -23,8 +23,8 @@ def func(individual):
     return np.sqrt(np.mean((y - yhat)**2))
 
 
-Cartesian = type("Cartesian", (Base, ), dict(pset=pset))
+MyCartesian = Cartesian("MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
 
-res = oneplus(func, 2, 2, 2, 1, f_tol=0.1, cls=Cartesian, random_state=rng, max_iter=10000, n_jobs=1)
+res = oneplus(func, f_tol=0.1, cls=MyCartesian, random_state=rng, max_iter=10000, n_jobs=1)
 print(res)
 print(to_polish(res.expr, return_args=False))

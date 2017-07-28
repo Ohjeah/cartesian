@@ -57,13 +57,10 @@ def _make_map(*lists):
             i += 1
 
 class Base(TransformerMixin):
-    def __init__(self, code, outputs, n_back):
+    def __init__(self, code, outputs):
         self.inputs = list(range(len(self.pset.terminals)))
         self.code = code
         self.outputs = outputs
-        self.n_back = n_back
-        self.n_columns = len(code)
-        self.n_rows = len(code[0])
 
     @property
     def map(self):
@@ -92,22 +89,22 @@ class Base(TransformerMixin):
         return self._transform(*x.T)
 
     @classmethod
-    def create(cls, n_columns, n_rows, n_back, n_out, random_state=None):
+    def create(cls, random_state=None):
         random_state = check_random_state(random_state)
 
         operator_keys = list(range(len(cls.pset.terminals), max(cls.pset.mapping) + 1))
         code = []
-        for i in range(n_columns):
+        for i in range(cls.n_columns):
             column = []
-            for j in range(n_rows):
-                min_input = max(0, (i-n_back)*n_rows) + len(cls.pset.terminals)
-                max_input = i * n_rows - 1 + len(cls.pset.terminals)
+            for j in range(cls.n_rows):
+                min_input = max(0, (i-cls.n_back)*cls.n_rows) + len(cls.pset.terminals)
+                max_input = i * cls.n_rows - 1 + len(cls.pset.terminals)
                 in_ = list(range(min_input, max_input)) + list(range(0, len(cls.pset.terminals)))
                 gene = [random_state.choice(operator_keys)] + [random_state.choice(in_) for _ in range(cls.pset.max_arity)]
                 column.append(gene)
             code.append(column)
-        outputs = [random_state.randint(0, n_columns*n_rows + len(cls.pset.terminals)) for _ in range(n_out)]
-        return cls(code, outputs, n_back)
+        outputs = [random_state.randint(0, cls.n_columns*cls.n_rows + len(cls.pset.terminals)) for _ in range(cls.n_out)]
+        return cls(code, outputs)
 
     def __getstate__(self):
         state = dict(self.__dict__)
@@ -141,25 +138,15 @@ def point_mutation(individual, random_state=None):
     new_individual[i] = new_gene
     return new_individual
 
-# class Cartesian(type):
-#     def __new__(mcs, name, primitive_set):
-#         print("new")
-#         import sys
-#         from inspect import getframeinfo, getmodulename, stack
-#         cls = super().__new__(mcs, name, (Base,), {"pset": primitive_set})
-#         caller = getframeinfo(stack()[1][0])         # find current_module by looking up caller in stack
-#         filename = getmodulename(caller.filename)
-#         try:
-#             current_module = [mod for mname, mod in sys.modules.items() if filename == mname.split('.')[-1]][0]
-#         except:
-#             current_module = sys.modules["__main__"]
-#         setattr(current_module, name, cls)
-#         return getattr(current_module, name)
-#
-#
-#     def __init__(cls, name, primitive_set):
-#         print("init")
-#         return super().__init__(name, (Base,), {"pset": primitive_set})
+
+class Cartesian(type):
+    def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
+        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
+        return super().__new__(mcs, name, (Base, ), dct)
+
+    def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
+        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
+        return super().__init__(name, (Base, ), dct)
 
 
 def to_polish(c, return_args=True):

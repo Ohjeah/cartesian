@@ -36,9 +36,9 @@ def func(individual):
     else:
         return OptimizeResult(x=(), fun=h(), nfev=1, nit=0, success=True)
 
-Cartesian = type("Cartesian", (Base, ), dict(pset=pset))
+MyCartesian = Cartesian("MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
 
-success = sum(oneplus(func, 15, 1, 2, 1, cls=Cartesian, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=1).success
+success = sum(oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=1).success
               for _ in range(30))/30.0
 
 print(success)
