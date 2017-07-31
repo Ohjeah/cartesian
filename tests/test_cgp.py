@@ -81,3 +81,18 @@ def test_Cartesian_copy(individual):
     assert new.code is not individual.code
     assert new.outputs == individual.outputs
     assert new.outputs is not individual.outputs
+
+
+def test_ephemeral_constant():
+    import random
+    terminals = [Terminal("x_0"), Terminal("x_1")]
+    operators = [Ephemeral("c", random.random)]
+    pset = create_pset(terminals + operators)
+
+    MyClass = Cartesian("MyClass", pset)
+    ind1 = MyClass([[2, 0]], [2])
+    s1 = to_polish(ind1, return_args=False)
+    s2 = to_polish(ind1.clone(), return_args=False)
+    assert s1 != s2
+    ind3 = point_mutation(ind1)
+    assert not ind3.memory # empty dict

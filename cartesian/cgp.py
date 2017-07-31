@@ -26,6 +26,10 @@ class Constant(Terminal):
     pass
 
 
+class Ephemeral(Primitive):
+    def __init__(self, name, function):
+        super().__init__(name, function, 0)
+
 # class PrimitiveSet:
 #     def __init__(self, primitives):
 #         self.operators = [p for p in primitives if p.arity > 0]
@@ -39,7 +43,7 @@ PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping
 
 
 def create_pset(primitives):
-    terminals = [p for p in primitives if p.arity == 0]
+    terminals = [p for p in primitives if isinstance(p, Terminal)]
     operators = [p for p in primitives if p not in terminals]
 
     if operators:
@@ -183,6 +187,12 @@ def to_polish(c, return_args=True):
         if primitive.arity == 0:
             if isinstance(primitive, Terminal):
                 used_arguments.add(primitive)
+
+            elif isinstance(primitive, Ephemeral):
+                if g not in c.memory:
+                    c.memory[g] = "{0:.2f}".format(primitive.function())
+                return c.memory[g]
+
             return primitive.name
 
         else:
