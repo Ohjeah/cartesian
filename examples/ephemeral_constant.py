@@ -29,5 +29,5 @@ def func(individual):
 
 MyCartesian = Cartesian("MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
 
-res = oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=100, n_jobs=1)
+res = oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=50000, n_jobs=1)
 print(res)

@@ -96,10 +96,11 @@ def test_ephemeral_constant():
     assert s1 != s2
     ind3 = point_mutation(ind1)
     assert not ind3.memory # empty dict
-
+    assert ind1.memory == pickle.loads(pickle.dumps(ind1)).memory
 
 def test_structural_constant_cls(sc):
     assert 0.5 == sc.function("x", "f(x)")
+
 
 def test_structural_constant_to_polish(sc):
     primitives = [Terminal("x_0"), sc]
