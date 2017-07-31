@@ -1,6 +1,7 @@
 import itertools
 import copy
 import sys
+import re
 from operator import attrgetter
 from collections import namedtuple
 
@@ -22,6 +23,7 @@ class Terminal(Primitive):
     def __init__(self, name):
         self.name = name
 
+
 class Constant(Terminal):
     pass
 
@@ -29,6 +31,21 @@ class Constant(Terminal):
 class Ephemeral(Primitive):
     def __init__(self, name, function):
         super().__init__(name, function, 0)
+
+
+class Structual(Primitive):
+    def __init__(self, name, function, arity):
+        self.name = name
+        self._function = function
+        self.arity = arity
+
+    def function(self, *args):
+        return self._function(*map(self.get_len, args))
+
+    @staticmethod
+    def get_len(expr, tokens=("(,")):
+        regex = "|".join("\\{}".format(t) for t in tokens)
+        return len(re.split(regex, expr))
 
 # class PrimitiveSet:
 #     def __init__(self, primitives):
@@ -111,6 +128,9 @@ class Base(TransformerMixin):
     def clone(self):
         return copy.copy(self)
 
+    def format(self, x):
+        return "{}".format(x)
+
     def fit(self, x, y=None, **fit_params):
         self._transform = compile(self)
         self.fit_params = fit_params
@@ -184,16 +204,19 @@ def to_polish(c, return_args=True):
         gene = make_it(c[g])
         primitive = primitives[next(gene)]
 
+        # refactor to primitive.format() ? side-effects?
         if primitive.arity == 0:
             if isinstance(primitive, Terminal):
                 used_arguments.add(primitive)
 
             elif isinstance(primitive, Ephemeral):
                 if g not in c.memory:
-                    c.memory[g] = "{0:.2f}".format(primitive.function())
+                    c.memory[g] = c.format(primitive.function())
                 return c.memory[g]
-
             return primitive.name
+
+        elif isinstance(primitive, Structual):
+            return c.format(primitive.function(*[h(a) for a, _ in zip(gene, range(primitive.arity))]))
 
         else:
             return "{}({})".format(primitive.name,

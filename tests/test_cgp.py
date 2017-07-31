@@ -96,3 +96,15 @@ def test_ephemeral_constant():
     assert s1 != s2
     ind3 = point_mutation(ind1)
     assert not ind3.memory # empty dict
+
+
+def test_structural_constant_cls(sc):
+    assert 0.5 == sc.function("x", "f(x)")
+
+def test_structural_constant_to_polish(sc):
+    primitives = [Terminal("x_0"), sc]
+    pset = create_pset(primitives)
+
+    MyClass = Cartesian("MyClass", pset)
+    ind = MyClass([[[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]], [2])
+    assert to_polish(ind, return_args=False) == ["1.0"]

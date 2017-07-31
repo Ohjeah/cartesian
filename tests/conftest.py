@@ -20,3 +20,8 @@ def individual(request):
     code = [[[3, 1]]]
     outputs = [3]
     return MyCartesian(code, outputs)
+
+@pytest.fixture
+def sc():
+    s = Structual("SC", (lambda x, y: x/y), 2)
+    return s
