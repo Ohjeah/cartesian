@@ -1,11 +1,13 @@
 import math
+from functools import wraps
 from operator import itemgetter
 
+import numpy as np
 from sklearn.utils.validation import check_random_state
-from scipy.optimize import OptimizeResult
+from scipy.optimize import OptimizeResult, minimize
 from joblib import Parallel, delayed
 
-from .cgp import Base, point_mutation
+from .cgp import Base, point_mutation, compile, to_polish, Constant
 
 
 def return_opt_result(f, individual):
@@ -50,3 +52,25 @@ def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
             return res
 
     return res
+
+
+def optimize(fun, individual):
+    f = compile(individual)
+    def h(*consts):
+        return fun(f, *consts)
+
+    expr, args = to_polish(individual, return_args=True)
+    constants = [a for a in args if isinstance(a, Constant)]
+    if constants:
+        res = minimize(h, np.ones_like(constants))
+        individual.consts = res.x
+        return res
+    else:
+        return OptimizeResult(x=(), fun=h(), nfev=1, nit=0, success=True)
+
+def optimize_constants(fun):
+    @wraps(fun)
+    def inner(individual):
+        res = optimize(fun, individual)
+        return res
+    return inner

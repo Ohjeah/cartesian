@@ -15,7 +15,7 @@ def test_PrimitiveSet(pset):
 
 
 def test_Cartesian(individual):
-    x = np.ones((1, 3))
+    x = np.ones((1, 2))
     y = individual.fit_transform(x)
     assert y == np.array([-1])
 
@@ -44,7 +44,7 @@ def test_boilerplate(individual):
 
 def test_compile(individual):
     f = compile(individual)
-    assert f(1, 1, 0) == -1
+    assert f(1, 1) == -1
 
 
 def test_point_mutation(individual):

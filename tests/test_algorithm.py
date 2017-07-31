@@ -17,12 +17,13 @@ def test_algorithm_success(individual):
 
 
 def test_algorithm_twin_problem_with_seed(individual):
-    shape = (100, len(individual.inputs))
+    shape = (100, 2)
     x = np.random.normal(size=shape)
     y = individual.fit_transform(x)
 
-    def fun(individual):
-        return np.sum((y - individual.fit_transform(x))**2)
+    @optimize_constants
+    def fun(f, *consts):
+        return np.sum((y - f(*x.T, *consts)))
 
     res = oneplus(fun, seed=individual)
     assert res.expr == individual
