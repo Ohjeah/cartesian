@@ -14,7 +14,7 @@ if sys.argv[-1] == "publish":
 
 setup(
     name='cartesian',
-    version="0.0.0",
+    version="0.1.0",
     description='Minimal cartesian genetic programming for symbolic regression.',
     long_description=long_description,
     author='Markus Quade',
