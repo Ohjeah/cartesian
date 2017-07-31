@@ -27,3 +27,19 @@ def test_algorithm_twin_problem_with_seed(individual):
 
     res = oneplus(fun, seed=individual)
     assert res.expr == individual
+
+
+def test_optimize(individual):
+    code = [[[3, 1]]]
+    outputs = [0]
+    ind = type(individual)(code, outputs)
+
+    shape = (100, 2)
+    x = np.random.normal(size=shape)
+
+    @optimize_constants
+    def fun(f, *consts):
+        return np.sum((f(*x.T, *consts))**2)
+
+    res = fun(ind)
+    assert res.x < 1e-6

@@ -1,6 +1,5 @@
 import operator
 import pickle
-import copy
 
 import numpy as np
 import pytest
@@ -74,7 +73,7 @@ def test_Cartesian_pickle(individual):
 
 def test_Cartesian_copy(individual):
     individual.memory[0] = 1
-    new = copy.copy(individual)
+    new = individual.clone()
     with pytest.raises(KeyError):
         new.memory[0]
 
