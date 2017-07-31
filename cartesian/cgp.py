@@ -17,24 +17,30 @@ class Primitive(object):
         self.arity = arity
 
 
-class Constant(Primitive):
-    arity = 0
-    def __init__(self, name):
-        self.name = name
-
-
 class Terminal(Primitive):
     arity = 0
     def __init__(self, name):
         self.name = name
 
+class Constant(Terminal):
+    pass
+
+
+# class PrimitiveSet:
+#     def __init__(self, primitives):
+#         self.operators = [p for p in primitives if p.arity > 0]
+#         self.terminals = [p for p in primitives if p.arity == 0]
+#
+#     @property
+#     def max_arity(self):
+#         return max(self.operators, key=attrgetter("arity")).arity if self.operators else 0
 
 PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping imapping context")
 
 
 def create_pset(primitives):
-    operators = [p for p in primitives if p.arity > 0]
     terminals = [p for p in primitives if p.arity == 0]
+    operators = [p for p in primitives if p not in terminals]
 
     if operators:
         max_arity = max(operators, key=attrgetter("arity")).arity
@@ -64,6 +70,8 @@ class Base(TransformerMixin):
         self.inputs = list(range(len(self.pset.terminals)))
         self.code = code
         self.outputs = outputs
+        # Primitives are allows to write their name values for storage
+        self.memory = {}
 
     @property
     def map(self):
@@ -110,6 +118,7 @@ class Base(TransformerMixin):
         return cls(code, outputs)
 
     def __getstate__(self):
+        # for compatibility with vanilla pickle protocol
         state = dict(self.__dict__)
         try:
             del state["_transform"]
@@ -117,13 +126,16 @@ class Base(TransformerMixin):
             pass
         return state
 
+    def __copy__(self):
+        # save copy, discard memory to refresh random constants
+        return type(self)(self.code[:], self.outputs[:])
+
 
 class Cartesian(type):
     def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        current_module = sys.modules[__name__]
         dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
         cls = super().__new__(mcs, name, (Base, ), dct)
-        setattr(current_module, name, cls)
+        setattr(sys.modules[__name__], name, cls)
         return cls
 
 
@@ -166,7 +178,7 @@ def to_polish(c, return_args=True):
         primitive = primitives[next(gene)]
 
         if primitive.arity == 0:
-            if isinstance(primitive, (Constant, Terminal)):
+            if isinstance(primitive, Terminal):
                 used_arguments.add(primitive)
             return primitive.name
         else:

@@ -1,5 +1,6 @@
 import operator
 import pickle
+import copy
 
 import numpy as np
 import pytest
@@ -8,13 +9,13 @@ from cartesian.cgp import *
 
 
 def test_PrimitiveSet(pset):
-    assert pset.mapping == {0: pset.terminals[0], 1: pset.terminals[1], 2: pset.operators[0]}
+    assert pset.mapping == {1: pset.terminals[0], 2: pset.terminals[1], 0: pset.terminals[2], 3: pset.operators[0]}
     assert pset.max_arity == 1
     assert pset.context[pset.operators[0].name] == operator.neg
 
 
 def test_Cartesian(individual):
-    x = np.ones((1, 2))
+    x = np.ones((1, 3))
     y = individual.fit_transform(x)
     assert y == np.array([-1])
 
@@ -37,13 +38,13 @@ def test_to_polish(individual):
 
 
 def test_boilerplate(individual):
-    assert boilerplate(individual) == "lambda x_0, x_1:"
+    assert boilerplate(individual) == "lambda x_0, x_1, c:"
     assert boilerplate(individual, used_arguments=[individual.pset.terminals[0]]) == "lambda x_0:"
 
 
 def test_compile(individual):
     f = compile(individual)
-    assert f(1, 1) == -1
+    assert f(1, 1, 0) == -1
 
 
 def test_point_mutation(individual):
@@ -69,3 +70,13 @@ def test_Cartesian_pickle(individual):
     pickled = pickle.loads(pickle.dumps(individual))
     for k in individual.__dict__.keys():
         assert pickled.__dict__[k] == individual.__dict__[k]
+
+
+def test_Cartesian_copy(individual):
+    individual.memory[0] = 1
+    new = copy.copy(individual)
+    with pytest.raises(KeyError):
+        new.memory[0]
+
+    assert new.code == individual.code
+    assert new.code is not individual.code

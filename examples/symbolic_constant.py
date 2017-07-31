@@ -22,12 +22,13 @@ y = x[:, 1] * x[:, 0] + 0.3
 
 def func(individual):
     f = compile(individual)
-
+    print(individual)
     def h(*consts):
         yhat = f(*x.T, *consts)
         return np.sqrt(np.mean((y - yhat)**2))/(y.max() - y.min())
 
     expr, args = to_polish(individual, return_args=True)
+    print(args)
     constants = [a for a in args if isinstance(a, Constant)]
     if constants:
         res = minimize(h, np.ones_like(constants))
@@ -38,7 +39,7 @@ def func(individual):
 
 MyCartesian = Cartesian("MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
 
-success = sum(oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=1).success
+success = sum(oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=0).success
               for _ in range(30))/30.0
 
 print(success)
