@@ -91,6 +91,22 @@ class Base(TransformerMixin):
         #return "in: {}\ncode: {}\nout: {}".format(self.inputs, self.code, self.outputs)
         return "\n".join(to_polish(self, return_args=False))
 
+    def __getstate__(self):
+        # for compatibility with vanilla pickle protocol
+        state = dict(self.__dict__)
+        try:
+            del state["_transform"]
+        except KeyError:
+            pass
+        return state
+
+    def __copy__(self):
+        # save copy, discard memory to refresh random constants
+        return type(self)(self.code[:], self.outputs[:])
+
+    def clone(self):
+        return copy.copy(self)
+
     def fit(self, x, y=None, **fit_params):
         self._transform = compile(self)
         self.fit_params = fit_params
@@ -116,19 +132,6 @@ class Base(TransformerMixin):
             code.append(column)
         outputs = [random_state.randint(0, cls.n_columns*cls.n_rows + len(cls.pset.terminals)) for _ in range(cls.n_out)]
         return cls(code, outputs)
-
-    def __getstate__(self):
-        # for compatibility with vanilla pickle protocol
-        state = dict(self.__dict__)
-        try:
-            del state["_transform"]
-        except KeyError:
-            pass
-        return state
-
-    def __copy__(self):
-        # save copy, discard memory to refresh random constants
-        return type(self)(self.code[:], self.outputs[:])
 
 
 class Cartesian(type):
@@ -164,7 +167,7 @@ def point_mutation(individual, random_state=None):
 
     else: # output gene
         new_gene = random_state.randint(0, individual.n_columns*individual.n_rows + len(individual.inputs))
-    new_individual = copy.deepcopy(individual)
+    new_individual = copy.copy(individual)
     new_individual[i] = new_gene
     return new_individual
 
@@ -181,6 +184,7 @@ def to_polish(c, return_args=True):
             if isinstance(primitive, Terminal):
                 used_arguments.add(primitive)
             return primitive.name
+
         else:
             return "{}({})".format(primitive.name,
                                    ", ".join(h(a) for a, _ in zip(gene, range(primitive.arity))))
@@ -207,7 +211,7 @@ def boilerplate(c, used_arguments=()):
 def compile(c):
     polish, args = to_polish(c, return_args=True)
     for t in c.pset.terminals:
-        if isinstance(t, Terminal):
+        if not isinstance(t, Constant):
             args.add(t)
     bp = boilerplate(c, used_arguments=args)
     code = "({})".format(", ".join(polish)) if len(polish) > 1 else polish[0]

@@ -80,3 +80,5 @@ def test_Cartesian_copy(individual):
 
     assert new.code == individual.code
     assert new.code is not individual.code
+    assert new.outputs == individual.outputs
+    assert new.outputs is not individual.outputs
