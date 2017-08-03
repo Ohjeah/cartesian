@@ -22,7 +22,7 @@ def test_algorithm_twin_problem_with_seed(individual):
     y = individual.fit_transform(x)
 
     @optimize_constants
-    def fun(f, *consts):
+    def fun(f, consts=()):
         return np.sum((y - f(*x.T, *consts)))
 
     res = oneplus(fun, seed=individual)
@@ -38,8 +38,8 @@ def test_optimize(individual):
     x = np.random.normal(size=shape)
 
     @optimize_constants
-    def fun(f, *consts):
-        return np.sum((f(*x.T, *consts))**2)
+    def fun(f, consts=()):
+        return np.sum((f(*x.T, consts))**2)
 
     res = fun(ind)
     assert res.x < 1e-6

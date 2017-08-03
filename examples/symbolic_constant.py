@@ -9,25 +9,23 @@ primitives = [
     Primitive("mul", np.multiply, 2),
     Terminal("x_0"),
     Terminal("x_1"),
-    Constant("c"),
+    Constant("c_1"),
+    Constant("c_2"),
 ]
 
 pset = create_pset(primitives)
-rng = check_random_state(None)
+rng = check_random_state(1337)
 
 x = rng.normal(size=(100, 2))
 y = x[:, 1] * x[:, 0] + 0.3
-#y += 0.05 * rng.normal(size=y.shape)
+y += 0.05 * rng.normal(size=y.shape)
 
 @optimize_constants
-def func(f, *consts):
+def func(f, consts=()):
     yhat = f(*x.T, *consts)
     return np.sqrt(np.mean((y - yhat)**2))/(y.max() - y.min())
 
-
 MyCartesian = Cartesian("MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
 
-success = sum(oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=1).success
-              for _ in range(30))/30.0
-
-print(success)
+res = oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=20000, n_jobs=1)
+print(res)
