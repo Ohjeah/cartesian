@@ -12,29 +12,72 @@ from cartesian.util import make_it
 
 
 class Primitive(object):
+    """Base class"""
     def __init__(self, name, function, arity):
+        """
+        :param name: for text representation
+        :param function: 
+        :param arity: 
+        """
         self.name = name
         self.function = function
         self.arity = arity
 
 
 class Terminal(Primitive):
+    """
+    Base class for variables.
+    Will always be used in the boilerplate ensuring a uniform signature, even if variable is not used in the genotype.
+    """
+
     arity = 0
+
     def __init__(self, name):
         self.name = name
 
 
 class Constant(Terminal):
+    """
+    Base class for symbolic constants.
+    Will be used for constant optimization.
+    Boilerplate: will only appear when used.
+    """
     pass
 
 
 class Ephemeral(Primitive):
+    """
+    Base class for ERC's.
+    ERC's are terminals, but they are implemented as zero arity functions, because they do not need to appear in the 
+    argument list of the lambda expression.
+    
+    .. Note ::
+    
+       Compilation behaviour: Each individual has a dict to store its numeric values. Each position in the code block will
+       only execute the function once. Values are lost during copying.
+    
+    """
     def __init__(self, name, function):
+
+        """
+        :param name: for text representation
+        :param function: callback(), should return a random numeric values.
+        """
         super().__init__(name, function, 0)
 
 
-class Structual(Primitive):
+class Structural(Primitive):
+    """
+    Structural constants are operators which take the graph representation of its arguments
+    and convert it to a numeric value.
+    """
+
     def __init__(self, name, function, arity):
+        """
+        :param name: for text representation 
+        :param function: 
+        :param arity: 
+        """
         self.name = name
         self._function = function
         self.arity = arity
@@ -43,23 +86,22 @@ class Structual(Primitive):
         return self._function(*map(self.get_len, args))
 
     @staticmethod
-    def get_len(expr, tokens=("(,")):
+    def get_len(expr, tokens="(,"):
+        """
+        Get the length of a tree by parsing its polish notation representation
+        :param expr: 
+        :param tokens: to split at
+        :return: length of expr 
+        """
         regex = "|".join("\\{}".format(t) for t in tokens)
         return len(re.split(regex, expr))
 
-# class PrimitiveSet:
-#     def __init__(self, primitives):
-#         self.operators = [p for p in primitives if p.arity > 0]
-#         self.terminals = [p for p in primitives if p.arity == 0]
-#
-#     @property
-#     def max_arity(self):
-#         return max(self.operators, key=attrgetter("arity")).arity if self.operators else 0
 
 PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping imapping context")
 
 
 def create_pset(primitives):
+    """Create immutable PrimitiveSet with some attributes for quick lookups"""
     terminals = [p for p in primitives if isinstance(p, Terminal)]
     operators = [p for p in primitives if p not in terminals]
 
@@ -68,10 +110,10 @@ def create_pset(primitives):
     else:
         max_arity = 0
 
-    mapping = {i: prim for i, prim in enumerate(sorted(terminals, key=attrgetter("name")) \
-                                              + sorted(operators, key=attrgetter("name")))}
+    mapping = {i: prim for i, prim in enumerate(sorted(terminals, key=attrgetter("name"))
+                  + sorted(operators, key=attrgetter("name")))}
 
-    imapping = inv_map = {v: k for k, v in mapping.items()}
+    imapping = {v: k for k, v in mapping.items()}
     context = {f.name: f.function for f in operators}
 
     return PrimitiveSet(operators=operators, terminals=terminals, imapping=imapping,
@@ -109,7 +151,6 @@ class Base(TransformerMixin):
         return max(self.map) + 1
 
     def __repr__(self):
-        #return "in: {}\ncode: {}\nout: {}".format(self.inputs, self.code, self.outputs)
         return "\n".join(to_polish(self, return_args=False))
 
     def __getstate__(self):
@@ -122,7 +163,7 @@ class Base(TransformerMixin):
         return state
 
     def __copy__(self):
-        # save copy, discard memory to refresh random constants
+        """save copy, discard memory to refresh random constants"""
         return type(self)(self.code[:], self.outputs[:])
 
     def clone(self):
@@ -141,6 +182,11 @@ class Base(TransformerMixin):
 
     @classmethod
     def create(cls, random_state=None):
+        """
+        Each gene is picked with a uniform distribution from all allowed inputs or functions.
+        :param random_state: an instance of np.random.RandomState, a seed integer or None
+        :return: A random new class instance.
+        """
         random_state = check_random_state(random_state)
 
         operator_keys = list(range(len(cls.pset.terminals), max(cls.pset.mapping) + 1))
@@ -159,19 +205,29 @@ class Base(TransformerMixin):
 
 
 class Cartesian(type):
+    """
+    Meta class to set class parameters and primitive set.
+    """
     def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
         dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
         cls = super().__new__(mcs, name, (Base, ), dct)
         setattr(sys.modules[__name__], name, cls)
         return cls
 
-
     def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
         dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
-        return super().__init__(name, (Base, ), dct)
+        super().__init__(name, (Base, ), dct)
 
 
 def point_mutation(individual, random_state=None):
+    """
+    Randomly pick a gene in individual and mutate it.
+    The mutation is either rewiring, i.e. changing the inputs, or changing the operator (head of gene)
+    :param individual: instance of Base
+    :type individual: instance of Cartesian
+    :param random_state: an instance of np.random.RandomState, a seed integer or None
+    :return: new instance of Base
+    """
     random_state = check_random_state(random_state)
     n_terminals = len(individual.pset.terminals)
     i = random_state.randint(n_terminals, len(individual))
@@ -180,9 +236,9 @@ def point_mutation(individual, random_state=None):
     if isinstance(gene, list):
         new_gene = gene[:]
         j = random_state.randint(0, len(gene))
-        if j == 0: # function
+        if j == 0:  # function
             new_j = individual.pset.imapping[random_state.choice(individual.pset.operators)]
-        else:      # input
+        else:       # input
             min_input = max(0, (c - 1 - individual.n_back)*individual.n_rows + n_terminals)
             max_input = max(0, (c - 1) * individual.n_rows - 1 + n_terminals)
             in_ = list(range(min_input, max_input)) + list(range(n_terminals))
@@ -197,6 +253,19 @@ def point_mutation(individual, random_state=None):
 
 
 def to_polish(c, return_args=True):
+    """
+    Return polish notation of expression encoded by c.
+    Optionally return the used arguments.
+    
+    Resolve the outputs recursively.
+    
+    .. Note :: 
+       Function has side-effects on the individual c.
+       See Terminals for details
+    
+    :param c: instance of Base
+    :type c: instance of Cartesian
+    """
     primitives = c.pset.mapping
     used_arguments = set()
 
@@ -215,7 +284,7 @@ def to_polish(c, return_args=True):
                 return c.memory[g]
             return primitive.name
 
-        elif isinstance(primitive, Structual):
+        elif isinstance(primitive, Structural):
             return c.format(primitive.function(*[h(a) for a, _ in zip(gene, range(primitive.arity))]))
 
         else:
@@ -231,6 +300,16 @@ def to_polish(c, return_args=True):
 
 
 def boilerplate(c, used_arguments=()):
+    """
+    Return the overhead needed to compile the polish notation.
+    
+    If used_arguments are provided, the boilerplate will only include
+    the constants which are used as well as all variables.
+    
+    :param c: instance of Base
+    :type c: instance of Cartesian
+    :param used_arguments: list of terminals actually used in c.
+    """
     mapping = c.pset.mapping
     if used_arguments:
         index = sorted([k for (k, v) in mapping.items() if v in used_arguments])
@@ -242,6 +321,11 @@ def boilerplate(c, used_arguments=()):
 
 
 def compile(c):
+    """
+    :param c: instance of Base
+    :type c: instance of Cartesian
+    :return: lambda function
+    """
     polish, args = to_polish(c, return_args=True)
     for t in c.pset.terminals:
         if not isinstance(t, Constant):
