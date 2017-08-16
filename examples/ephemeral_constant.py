@@ -4,7 +4,7 @@ from sklearn.utils.validation import check_random_state
 from cartesian.algorithm import oneplus
 from cartesian.cgp import *
 
-rng = check_random_state(None)
+rng = check_random_state(1337)
 
 primitives = [
     Primitive("add", np.add, 2),

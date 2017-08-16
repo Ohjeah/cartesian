@@ -1,6 +1,5 @@
 import math
 from functools import wraps
-from operator import itemgetter
 
 import numpy as np
 from sklearn.utils.validation import check_random_state
@@ -11,6 +10,14 @@ from .cgp import Base, point_mutation, compile, to_polish, Constant
 
 
 def return_opt_result(f, individual):
+    """
+    Ensure that f returns a scipy.optimize.OptimizeResult
+
+    :param f: `callable(individual`
+    :param individual: instance of cartesian.cgp.Base
+    :type individual: instance of cartesian.cgp.Cartesian
+    :return: OptimizeResult
+    """
     res = f(individual)
     if not isinstance(res, OptimizeResult):
         res = OptimizeResult(x=(), fun=res, nit=0, nfev=1, success=True)
@@ -20,6 +27,28 @@ def return_opt_result(f, individual):
 def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
             max_nfev=None, f_tol=0, n_jobs=1, seed=None):
 
+    """
+    1 + lambda algorithm.
+    In each generation, create lambda offspring and compare their fitness to the parent individual.
+    The fittest individual carries over to the next generation. In case of a draw, the offspring is prefered.
+
+
+    :param fun: `callable(individual)`, function to be optimized
+    :param random_state: an instance of np.random.RandomState, a seed integer or None
+    :param cls: The base class for individuals
+    :type cls: (optional) instance of cartesian.cgp.Cartesian
+    :param seed: (optional) can be passed instead of cls.
+    :param lambda_: number of offspring per generation
+    :param max_iter: maximum number of generations
+    :param max_nfev: maximum number of function evaluations. Important, if fun is another optimizer
+    :param f_tol: threshold for precision
+    :param n_jobs: number of jobs for joblib embarrassingly easy parallel
+
+    :return: scipy.optimize.OptimizeResult with non-standard attributes
+    res.x = values for constants
+    res.expr = expression
+    res.fun = best value for the function
+    """
     max_iter = max_nfev if max_nfev else max_iter
     max_nfev = max_nfev or math.inf
 
@@ -55,6 +84,13 @@ def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
 
 
 def optimize(fun, individual):
+    """
+    Prepare individual and fun to optimize fun(c | individual)
+
+    :param fun: callable of lambda expression and its constant values.
+    :param individual:
+    :return: scipy.optimize.OptimizeResult
+    """
     f = compile(individual)
     def h(consts=()):
         return fun(f, consts)
@@ -70,6 +106,8 @@ def optimize(fun, individual):
 
 
 def optimize_constants(fun):
+    """Wrap a measure with constant optimization.
+    """
     @wraps(fun)
     def inner(individual):
         res = optimize(fun, individual)

@@ -11,7 +11,7 @@ primitives = [
     Primitive("mul", np.multiply, 2),
     Terminal("x_0"),
     Terminal("x_1"),
-    Structual("SC", (lambda x, y: min(x, y)/max(x, y)), 2),
+    Structural("SC", (lambda x, y: min(x, y) / max(x, y)), 2),
 ]
 
 pset = create_pset(primitives)

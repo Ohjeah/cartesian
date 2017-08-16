@@ -23,5 +23,5 @@ def individual(request):
 
 @pytest.fixture
 def sc():
-    s = Structual("SC", (lambda x, y: x/y), 2)
+    s = Structural("SC", (lambda x, y: x / y), 2)
     return s

@@ -18,6 +18,7 @@ x = rng.normal(size=(100, 2))
 y = x[:, 1] * x[:, 1] + x[:, 0]
 y += 0.05 * rng.normal(size=y.shape)
 
+
 def func(individual):
     yhat = individual.fit_transform(x)
     return np.sqrt(np.mean((y - yhat)**2))
