@@ -56,8 +56,8 @@ def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
 
 def optimize(fun, individual):
     f = compile(individual)
-    def h(*consts):
-        return fun(f, *consts)
+    def h(consts=()):
+        return fun(f, consts)
 
     expr, args = to_polish(individual, return_args=True)
     constants = [a for a in args if isinstance(a, Constant)]

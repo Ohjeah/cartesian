@@ -213,7 +213,11 @@ def to_polish(c, return_args=True):
                 if g not in c.memory:
                     c.memory[g] = c.format(primitive.function())
                 return c.memory[g]
-            return primitive.name
+
+            if isinstance(primitive, Terminal):
+                return primitive.name
+            else:
+                return "{}()".format(primitive.name)
 
         elif isinstance(primitive, Structual):
             return c.format(primitive.function(*[h(a) for a, _ in zip(gene, range(primitive.arity))]))
