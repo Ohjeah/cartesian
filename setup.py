@@ -1,31 +1,76 @@
+import io
 import os
 import sys
-from setuptools import setup
+from shutil import rmtree
 
-with open('README.md') as f:
-    long_description = '\n' + f.read()
+from setuptools import find_packages, setup, Command
 
-with open("requirements.txt", "r") as f:
-    required = f.readlines()
+NAME = "cartesian"
+DESCRIPTION = 'Minimal cartesian genetic programming for symbolic regression.'
+URL = 'https://github.com/ohjeah/cartesian'
+EMAIL = 'info@markusqua.de'
+AUTHOR = 'Markus Quade'
 
-if sys.argv[-1] == "publish":
-    os.system("python setup.py sdist bdist_wheel upload")
-    sys.exit()
+here = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(here, "requirements.txt"), "r") as f:
+    REQUIRED = f.readlines()
+
+about = {}
+with open(os.path.join(here, NAME, '__version__.py')) as f:
+    exec(f.read(), about)
+
+
+class PublishCommand(Command):
+    """Support setup.py publish."""
+
+    description = 'Build and publish the package.'
+    user_options = []
+
+    @staticmethod
+    def status(s):
+        """Prints things in bold."""
+        print('\033[1m{0}\033[0m'.format(s))
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            self.status('Removing previous builds ...')
+            rmtree(os.path.join(here, 'dist'))
+        except FileNotFoundError:
+            pass
+
+        self.status('Building Source and Wheel (universal) distribution...')
+        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
+
+        self.status('Uploading the package to PyPi via Twine...')
+        os.system('twine upload dist/*')
+
+        sys.exit()
+
 
 setup(
-    name='cartesian',
-    version="0.1.0",
-    description='Minimal cartesian genetic programming for symbolic regression.',
-    long_description=long_description,
-    author='Markus Quade',
-    author_email='info@markusqua.de',
-    url='https://github.com/ohjeah/cartesian',
-    packages=['cartesian'],
-    install_requires=required,
+    name=NAME,
+    version=about['__version__'],
+    description=DESCRIPTION,
+    long_description=__doc__,
+    author=AUTHOR,
+    author_email=EMAIL,
+    url=URL,
+    packages=find_packages(exclude=["test", "example"]),
+    install_requires=REQUIRED,
     license='MIT',
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
+    cmdclass={
+        'publish': PublishCommand,
+    },
 )

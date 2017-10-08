@@ -92,9 +92,8 @@ def optimize(fun, individual):
     :return: scipy.optimize.OptimizeResult
     """
     f = compile(individual)
-
-    def h(*consts):
-        return fun(f, *consts)
+    def h(consts=()):
+        return fun(f, consts)
 
     expr, args = to_polish(individual, return_args=True)
     constants = [a for a in args if isinstance(a, Constant)]
