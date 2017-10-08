@@ -16,8 +16,8 @@ class Primitive(object):
     def __init__(self, name, function, arity):
         """
         :param name: for text representation
-        :param function: 
-        :param arity: 
+        :param function:
+        :param arity:
         """
         self.name = name
         self.function = function
@@ -48,14 +48,14 @@ class Constant(Terminal):
 class Ephemeral(Primitive):
     """
     Base class for ERC's.
-    ERC's are terminals, but they are implemented as zero arity functions, because they do not need to appear in the 
+    ERC's are terminals, but they are implemented as zero arity functions, because they do not need to appear in the
     argument list of the lambda expression.
-    
+
     .. Note ::
-    
+
        Compilation behaviour: Each individual has a dict to store its numeric values. Each position in the code block will
        only execute the function once. Values are lost during copying.
-    
+
     """
     def __init__(self, name, function):
 
@@ -74,9 +74,9 @@ class Structural(Primitive):
 
     def __init__(self, name, function, arity):
         """
-        :param name: for text representation 
-        :param function: 
-        :param arity: 
+        :param name: for text representation
+        :param function:
+        :param arity:
         """
         self.name = name
         self._function = function
@@ -89,9 +89,9 @@ class Structural(Primitive):
     def get_len(expr, tokens="(,"):
         """
         Get the length of a tree by parsing its polish notation representation
-        :param expr: 
+        :param expr:
         :param tokens: to split at
-        :return: length of expr 
+        :return: length of expr
         """
         regex = "|".join("\\{}".format(t) for t in tokens)
         return len(re.split(regex, expr))
@@ -128,27 +128,60 @@ def _make_map(*lists):
             i += 1
 
 
+def _code_index(n_in, n_row, c, r):
+    return n_in + c*n_row + r
+
+
+def _out_index(n_rows, n_columns, n_in, o):
+    return n_rows * n_columns + n_in + o
+
+
+def _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
+    """dict of valid input genes for each gene in genom.
+    Genes in the same column are not allowed to be connected to each other.
+    """
+    inputs = {i: [] for i in range(n_inputs)}
+    for c in range(n_columns):
+        first_index_this_column = c * n_rows + n_inputs
+        min_ = min(first_index_this_column - n_rows * n_back, n_inputs)
+        max_ = first_index_this_column - 1
+        for r in range(n_rows):
+            i = _code_index(n_inputs, n_rows, c, r)
+            inputs[i] = list(range(min_, max_)) + list(range(n_inputs))
+
+    min_ = min(max(0, (n_columns-n_back-1)*n_rows), n_inputs)
+    max_ = max(inputs)
+
+    for o in range(n_out):
+        inputs[o + max_ + 1] = list(range(min_, max_)) + list(range(n_inputs))
+
+    for k, v in inputs.items():
+        inputs[k] = list(set(v))
+    return inputs
+
+
 class Base(TransformerMixin):
     def __init__(self, code, outputs):
-        self.inputs = list(range(len(self.pset.terminals)))
+        self.n_inputs = len(self.pset.terminals)
+        self.inputs = list(range(self.n_inputs))
         self.code = code
         self.outputs = outputs
-        # Primitives are allows to write their name values for storage
+        # Primitives are allowed to write their name values for storage
         self.memory = {}
 
     @property
-    def map(self):
+    def mapping(self):
         return {i: (el, c, r, l) for i, el, c, r, l in _make_map(self.inputs, *self.code, self.outputs)}
 
     def __getitem__(self, index):
-        return self.map[index][0]
+        return self.mapping[index][0]
 
     def __setitem__(self, index, item):
-        el, c, r, l = self.map[index]
+        el, c, r, l = self.mapping[index]
         l[r] = item
 
     def __len__(self):
-        return max(self.map) + 1
+        return self.n_columns * self.n_rows + self.n_out + self.n_inputs
 
     def __repr__(self):
         return "\n".join(to_polish(self, return_args=False))
@@ -188,19 +221,19 @@ class Base(TransformerMixin):
         :return: A random new class instance.
         """
         random_state = check_random_state(random_state)
-
-        operator_keys = list(range(len(cls.pset.terminals), max(cls.pset.mapping) + 1))
+        n_in = len(cls.pset.terminals)
+        operator_keys = list(range(n_in, max(cls.pset.mapping) + 1))
         code = []
         for i in range(cls.n_columns):
             column = []
             for j in range(cls.n_rows):
-                min_input = max(0, (i-cls.n_back)*cls.n_rows) + len(cls.pset.terminals)
-                max_input = i * cls.n_rows - 1 + len(cls.pset.terminals)
-                in_ = list(range(min_input, max_input)) + list(range(0, len(cls.pset.terminals)))
+                index = _code_index(n_in, cls.n_rows, i, j)
+                in_ = cls._valid_inputs[index]
                 gene = [random_state.choice(operator_keys)] + [random_state.choice(in_) for _ in range(cls.pset.max_arity)]
                 column.append(gene)
             code.append(column)
-        outputs = [random_state.randint(0, cls.n_columns*cls.n_rows + len(cls.pset.terminals)) for _ in range(cls.n_out)]
+        outputs = [random_state.choice(cls._valid_inputs[_out_index(cls.n_rows, cls.n_columns, n_in, o)])
+                   for o in range(cls.n_out)]
         return cls(code, outputs)
 
 
@@ -209,13 +242,17 @@ class Cartesian(type):
     Meta class to set class parameters and primitive set.
     """
     def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
+        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, len(primitive_set.terminals), n_out)
+        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows,
+                   n_back=n_back, n_out=n_out, _valid_inputs=valid_inputs)
         cls = super().__new__(mcs, name, (Base, ), dct)
         setattr(sys.modules[__name__], name, cls)
         return cls
 
     def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows, n_back=n_back, n_out=n_out)
+        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, len(primitive_set.terminals), n_out)
+        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows,
+                   n_back=n_back, n_out=n_out, _valid_inputs=valid_inputs)
         super().__init__(name, (Base, ), dct)
 
 
@@ -230,8 +267,8 @@ def point_mutation(individual, random_state=None):
     """
     random_state = check_random_state(random_state)
     n_terminals = len(individual.pset.terminals)
-    i = random_state.randint(n_terminals, len(individual))
-    el, c, r, l = individual.map[i]
+    i = random_state.randint(n_terminals, len(individual) - 1)
+    el, c, r, l = individual.mapping[i]
     gene = l[r]
     if isinstance(gene, list):
         new_gene = gene[:]
@@ -239,14 +276,11 @@ def point_mutation(individual, random_state=None):
         if j == 0:  # function
             new_j = individual.pset.imapping[random_state.choice(individual.pset.operators)]
         else:       # input
-            min_input = max(0, (c - 1 - individual.n_back)*individual.n_rows + n_terminals)
-            max_input = max(0, (c - 1) * individual.n_rows - 1 + n_terminals)
-            in_ = list(range(min_input, max_input)) + list(range(n_terminals))
-            new_j = random_state.choice(in_)
+            new_j = random_state.choice(individual._valid_inputs[i])
         new_gene[j] = new_j
 
     else: # output gene
-        new_gene = random_state.randint(0, individual.n_columns*individual.n_rows + len(individual.inputs))
+        new_gene = random_state.randint(0, len(individual) - individual.n_out - 1)
     new_individual = copy.copy(individual)
     new_individual[i] = new_gene
     return new_individual
@@ -256,13 +290,13 @@ def to_polish(c, return_args=True):
     """
     Return polish notation of expression encoded by c.
     Optionally return the used arguments.
-    
+
     Resolve the outputs recursively.
-    
-    .. Note :: 
+
+    .. Note ::
        Function has side-effects on the individual c.
        See Terminals for details
-    
+
     :param c: instance of Base
     :type c: instance of Cartesian
     """
@@ -302,10 +336,10 @@ def to_polish(c, return_args=True):
 def boilerplate(c, used_arguments=()):
     """
     Return the overhead needed to compile the polish notation.
-    
+
     If used_arguments are provided, the boilerplate will only include
     the constants which are used as well as all variables.
-    
+
     :param c: instance of Base
     :type c: instance of Cartesian
     :param used_arguments: list of terminals actually used in c.
