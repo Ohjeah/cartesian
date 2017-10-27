@@ -20,5 +20,6 @@ deploy:
   user: ohjeah
   password: $PYPI_PW
   on:
-    tags: false
+    tags: true
     python: "3.6"
+    all_branches: true
