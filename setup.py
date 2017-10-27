@@ -1,10 +1,7 @@
-import io
 import os
-import sys
-from shutil import rmtree
 
 import versioneer
-from setuptools import find_packages, setup, Command
+from setuptools import find_packages, setup
 
 NAME = "cartesian"
 DESCRIPTION = "Minimal cartesian genetic programming for symbolic regression."
@@ -16,40 +13,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, "requirements.txt"), "r") as f:
     REQUIRED = f.readlines()
-
-
-class PublishCommand(Command):
-    """Support setup.py publish."""
-
-    description = "Build and publish the package."
-    user_options = []
-
-    @staticmethod
-    def status(s):
-        """Prints things in bold."""
-        print("\033[1m{0}\033[0m".format(s))
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        try:
-            self.status("Removing previous builds ...")
-            rmtree(os.path.join(here, "dist"))
-        except FileNotFoundError:
-            pass
-
-        self.status("Building Source and Wheel (universal) distribution...")
-        os.system("{0} setup.py sdist bdist_wheel --universal".format(sys.executable))
-
-        self.status("Uploading the package to PyPi via Twine...")
-        os.system("twine upload dist/*")
-
-        sys.exit()
-
 
 setup(
     name=NAME,
@@ -67,7 +30,5 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
     ],
-    cmdclass=versioneer.get_cmdclass({
-        "publish": PublishCommand,
-    }),
+    cmdclass=versioneer.get_cmdclass(),
 )
