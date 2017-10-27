@@ -14,3 +14,10 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+deploy:
+  provider: pypi
+  user: ohjeah
+  password: $PYPI_PW
+  on:
+    tags: true
