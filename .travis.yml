@@ -20,5 +20,5 @@ deploy:
   user: ohjeah
   password: $PYPI_PW
   on:
-    tags: true
+    tags: false
     python: "3.6"
