@@ -7,7 +7,7 @@ from cartesian.cgp import *
 
 @pytest.fixture()
 def pset():
-    terminals = [Terminal("x_0"), Terminal("x_1"), Constant("c")]
+    terminals = [Symbol("x_0"), Symbol("x_1"), Constant("c")]
     operators = [Primitive("neg", operator.neg, 1)]
     pset = create_pset(terminals + operators)
     return pset

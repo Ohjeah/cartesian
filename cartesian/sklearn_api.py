@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.metrics import mean_squared_error
 from sklearn.utils.validation import check_array, check_random_state
 
-from .cgp import create_pset, Terminal, Primitive, Constant, compile, Cartesian
+from .cgp import create_pset, Symbol, Primitive, Constant, compile, Cartesian
 from .algorithm import oneplus, optimize
 
 DEFAULT_PRIMITIVES = [Primitive("add", np.add, 2), Primitive("mul", np.multiply, 2)]
@@ -82,7 +82,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
         x = check_array(x)
         _, self.n_out = y.reshape(y.shape[0], -1).shape
         _, n_features = x.shape
-        terminals = [Terminal("x_{}".format(i)) for i in range(n_features)]
+        terminals = [Symbol("x_{}".format(i)) for i in range(n_features)]
         self.pset = create_pset(self.operators + terminals + self.constants)
         cls = Cartesian(str(hash(self)), self.pset, n_rows=self.n_rows,
                         n_columns=self.n_columns, n_out=self.n_out, n_back=self.n_back)

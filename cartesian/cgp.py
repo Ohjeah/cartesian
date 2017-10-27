@@ -24,7 +24,7 @@ class Primitive(object):
         self.arity = arity
 
 
-class Terminal(Primitive):
+class Symbol(Primitive):
     """
     Base class for variables.
     Will always be used in the boilerplate ensuring a uniform signature, even if variable is not used in the genotype.
@@ -36,7 +36,7 @@ class Terminal(Primitive):
         self.name = name
 
 
-class Constant(Terminal):
+class Constant(Symbol):
     """
     Base class for symbolic constants.
     Will be used for constant optimization.
@@ -97,27 +97,30 @@ class Structural(Primitive):
         return len(re.split(regex, expr))
 
 
-PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping imapping context")
+PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping imapping context symbols")
 
 
 def create_pset(primitives):
     """Create immutable PrimitiveSet with some attributes for quick lookups"""
-    terminals = [p for p in primitives if isinstance(p, Terminal)]
-    operators = [p for p in primitives if p not in terminals]
+    terminals = [p for p in primitives if p.arity == 0]
+    symbols = [p for p in primitives if isinstance(p, Symbol)]
+    non_symbols = [p for p in terminals if not isinstance(p, Symbol)]
+    operators = [p for p in primitives if p.arity > 0]
 
     if operators:
         max_arity = max(operators, key=attrgetter("arity")).arity
     else:
         max_arity = 0
 
-    mapping = {i: prim for i, prim in enumerate(sorted(terminals, key=attrgetter("name"))
+    mapping = {i: prim for i, prim in enumerate(sorted(symbols, key=attrgetter("name"))
+                  + sorted(non_symbols, key=attrgetter("name"))
                   + sorted(operators, key=attrgetter("name")))}
 
     imapping = {v: k for k, v in mapping.items()}
     context = {f.name: f.function for f in operators}
 
     return PrimitiveSet(operators=operators, terminals=terminals, imapping=imapping,
-                        max_arity=max_arity, mapping=mapping, context=context)
+                        max_arity=max_arity, mapping=mapping, context=context, symbols=symbols)
 
 
 def _make_map(*lists):
@@ -143,8 +146,8 @@ def _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
     inputs = {i: [] for i in range(n_inputs)}
     for c in range(n_columns):
         first_index_this_column = c * n_rows + n_inputs
-        min_ = min(first_index_this_column - n_rows * n_back, n_inputs)
-        max_ = first_index_this_column - 1
+        min_ = max(min(first_index_this_column - n_rows * n_back, n_inputs), 0)
+        max_ = first_index_this_column
         for r in range(n_rows):
             i = _code_index(n_inputs, n_rows, c, r)
             inputs[i] = list(range(min_, max_)) + list(range(n_inputs))
@@ -153,7 +156,7 @@ def _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
     max_ = max(inputs)
 
     for o in range(n_out):
-        inputs[o + max_ + 1] = list(range(min_, max_)) + list(range(n_inputs))
+        inputs[o + max_ + 1] = list(range(min_, max_ + 1)) + list(range(n_inputs))
 
     for k, v in inputs.items():
         inputs[k] = list(set(v))
@@ -164,6 +167,7 @@ class Base(TransformerMixin):
     def __init__(self, code, outputs):
         self.n_inputs = len(self.pset.terminals)
         self.inputs = list(range(self.n_inputs))
+        self.symbols = self.inputs[:len(self.pset.symbols)]
         self.code = code
         self.outputs = outputs
         # Primitives are allowed to write their name values for storage
@@ -295,21 +299,20 @@ def to_polish(c, return_args=True):
 
     .. Note ::
        Function has side-effects on the individual c.
-       See Terminals for details
+       See Symbols for details
 
     :param c: instance of Base
     :type c: instance of Cartesian
     """
     primitives = c.pset.mapping
     used_arguments = set()
-
     def h(g):
         gene = make_it(c[g])
         primitive = primitives[next(gene)]
 
         # refactor to primitive.format() ? side-effects?
         if primitive.arity == 0:
-            if isinstance(primitive, Terminal):
+            if isinstance(primitive, Symbol):
                 used_arguments.add(primitive)
 
             elif isinstance(primitive, Ephemeral):
@@ -317,7 +320,7 @@ def to_polish(c, return_args=True):
                     c.memory[g] = c.format(primitive.function())
                 return c.memory[g]
 
-            if isinstance(primitive, Terminal):
+            if isinstance(primitive, Symbol):
                 return primitive.name
             else:
                 return "{}()".format(primitive.name)
@@ -354,8 +357,9 @@ def boilerplate(c, used_arguments=()):
         args = [mapping[i] for i in index]
     else:
         args = [mapping[i] for i in c.inputs]
-    args = [a for a in args if not isinstance(a, Constant)] + [a for a in args if isinstance(a, Constant)]
-    return "lambda {}:".format(", ".join(a.name for a in args))
+    args_ = [a for a in args if isinstance(a, Symbol) and not isinstance(a, Constant)]
+    args_ += [a for a in args if isinstance(a, Constant)]
+    return "lambda {}:".format(", ".join(a.name for a in args_))
 
 
 def compile(c):
@@ -365,7 +369,7 @@ def compile(c):
     :return: lambda function
     """
     polish, args = to_polish(c, return_args=True)
-    for t in c.pset.terminals:
+    for t in c.pset.symbols:
         if not isinstance(t, Constant):
             args.add(t)
     bp = boilerplate(c, used_arguments=args)

@@ -3,6 +3,8 @@ import pickle
 
 import numpy as np
 import pytest
+import hypothesis
+from hypothesis.strategies import integers
 
 from cartesian.cgp import *
 from cartesian.cgp import _get_valid_inputs
@@ -87,7 +89,7 @@ def test_Cartesian_copy(individual):
 
 def test_ephemeral_constant():
     import random
-    terminals = [Terminal("x_0"), Terminal("x_1")]
+    terminals = [Symbol("x_0"), Symbol("x_1")]
     operators = [Ephemeral("c", random.random)]
     pset = create_pset(terminals + operators)
 
@@ -106,7 +108,7 @@ def test_structural_constant_cls(sc):
 
 
 def test_structural_constant_to_polish(sc):
-    primitives = [Terminal("x_0"), sc]
+    primitives = [Symbol("x_0"), sc]
     pset = create_pset(primitives)
 
     MyClass = Cartesian("MyClass", pset)
@@ -114,12 +116,12 @@ def test_structural_constant_to_polish(sc):
     assert to_polish(ind, return_args=False) == ["1.0"]
 
 
-def test__get_valid_inputs():
-    n_rows = 1
-    n_columns = 1
-    n_back = 1
-    n_inputs = 1
-    n_out = 1
+@hypothesis.given(n_rows=integers(1, 5),
+                  n_columns=integers(1, 5),
+                  n_back=integers(1, 5),
+                  n_inputs=integers(1, 5),
+                  n_out=integers(1, 5))
+def test__get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
 
     valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out)
     assert len(valid_inputs) == n_out + n_inputs + n_rows * n_columns
@@ -130,3 +132,7 @@ def test__get_valid_inputs():
             assert v
         else:
             assert not v
+
+def test__get_valid_inputs_edge_case():
+    valid_inputs = _get_valid_inputs(1, 2, 1, 1, 1)
+    assert valid_inputs == {0: [], 1: [0], 2: [0, 1], 3: [0, 1, 2]}

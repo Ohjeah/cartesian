@@ -67,9 +67,9 @@ def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
     for i in range(1, max_iter):
         offspring = [point_mutation(best, random_state=random_state) for _ in range(lambda_)]
 
-        with Parallel(n_jobs=n_jobs) as parallel:
-                offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
-        #offspring_fitness = [return_opt_result(fun, o) for o in offspring]
+        # with Parallel(n_jobs=n_jobs) as parallel:
+        #         offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
+        offspring_fitness = [return_opt_result(fun, o) for o in offspring]
         best, best_res = min(zip(offspring + [best], offspring_fitness + [best_res]), key=lambda x: x[1].fun)
         nfev += sum(of.nfev for of in offspring_fitness)
 

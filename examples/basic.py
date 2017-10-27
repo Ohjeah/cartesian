@@ -7,8 +7,8 @@ from cartesian.cgp import *
 primitives = [
     Primitive("add", np.add, 2),
     Primitive("mul", np.multiply, 2),
-    Terminal("x_0"),
-    Terminal("x_1")
+    Symbol("x_0"),
+    Symbol("x_1")
 ]
 
 pset = create_pset(primitives)

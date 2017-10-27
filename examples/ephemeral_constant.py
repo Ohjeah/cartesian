@@ -9,8 +9,8 @@ rng = check_random_state(1337)
 primitives = [
     Primitive("add", np.add, 2),
     Primitive("mul", np.multiply, 2),
-    Terminal("x_0"),
-    Terminal("x_1"),
+    Symbol("x_0"),
+    Symbol("x_1"),
     Ephemeral("erc", rng.normal),
 ]
 
