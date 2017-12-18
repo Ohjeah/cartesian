@@ -1,4 +1,4 @@
-sklearn[alldeps]
+scikit-learn[alldeps]
 joblib
 scipy
 numpy

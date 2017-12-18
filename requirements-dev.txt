@@ -1,0 +1,7 @@
+-e .
+-r requirements.txt
+pytest
+pytest-cov
+hypothesis
+setuptools_scm
+setuptools_scm_git_archive

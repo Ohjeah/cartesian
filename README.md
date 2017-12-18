@@ -11,3 +11,10 @@ The basic components are provided:
 - data structure
 - 1+4 Algorithm
 - symbolic, ephemeral and structured constants
+
+
+## Installation
+
+cartesian is available on PyPI
+
+`pip install cartesian`

@@ -1,4 +1,2 @@
 include README.md
 include requirements.txt
-include versioneer.py
-include cartesian/_version.py

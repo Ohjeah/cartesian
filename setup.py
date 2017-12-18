@@ -1,8 +1,6 @@
 import os
 
-import versioneer
 from setuptools import find_packages, setup
-
 
 NAME = "cartesian"
 DESCRIPTION = "Minimal cartesian genetic programming for symbolic regression."
@@ -28,7 +26,6 @@ with open(os.path.join(here, "requirements.txt"), "r") as f:
 
 setup(
     name=NAME,
-    version=versioneer.get_version(),
     description=DESCRIPTION,
     long_description=DESCRIPTION,
     author=AUTHOR,
@@ -37,7 +34,8 @@ setup(
     packages=find_packages(exclude=["test", "example"]),
     install_requires=REQUIRED,
     python_requires=PYTHON,
+    use_scm_version=True,
+    setup_requires=["setuptools_scm", "setuptools_scm_git_archive"],
     license=LICENSE,
-    classifiers=CLASSIFIERS,
-    cmdclass=versioneer.get_cmdclass(),
+    classifiers=CLASSIFIERS
 )
