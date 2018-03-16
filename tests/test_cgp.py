@@ -11,7 +11,12 @@ from cartesian.cgp import _get_valid_inputs
 
 
 def test_PrimitiveSet(pset):
-    assert pset.mapping == {1: pset.terminals[0], 2: pset.terminals[1], 0: pset.terminals[2], 3: pset.operators[0]}
+    assert pset.mapping == {
+        1: pset.terminals[0],
+        2: pset.terminals[1],
+        0: pset.terminals[2],
+        3: pset.operators[0]
+    }
     assert pset.max_arity == 1
     assert pset.context[pset.operators[0].name] == operator.neg
 
@@ -29,7 +34,7 @@ def test_Cartesian_get(individual):
 
 def test_Cartesian_set(individual):
     n = len(individual)
-    individual[n-1] = 1
+    individual[n - 1] = 1
     assert individual.outputs[0] == 1
 
 
@@ -41,7 +46,9 @@ def test_to_polish(individual):
 
 def test_boilerplate(individual):
     assert boilerplate(individual) == "lambda x_0, x_1, c:"
-    assert boilerplate(individual, used_arguments=[individual.pset.terminals[0]]) == "lambda x_0:"
+    assert boilerplate(
+        individual,
+        used_arguments=[individual.pset.terminals[0]]) == "lambda x_0:"
 
 
 def test_compile(individual):
@@ -99,7 +106,7 @@ def test_ephemeral_constant():
     s2 = to_polish(ind1.clone(), return_args=False)
     assert s1 != s2
     ind3 = point_mutation(ind1)
-    assert not ind3.memory # empty dict
+    assert not ind3.memory  # empty dict
     assert ind1.memory == pickle.loads(pickle.dumps(ind1)).memory
 
 
@@ -116,14 +123,16 @@ def test_structural_constant_to_polish(sc):
     assert to_polish(ind, return_args=False) == ["1.0"]
 
 
-@hypothesis.given(n_rows=integers(1, 5),
-                  n_columns=integers(1, 5),
-                  n_back=integers(1, 5),
-                  n_inputs=integers(1, 5),
-                  n_out=integers(1, 5))
+@hypothesis.given(
+    n_rows=integers(1, 5),
+    n_columns=integers(1, 5),
+    n_back=integers(1, 5),
+    n_inputs=integers(1, 5),
+    n_out=integers(1, 5))
 def test__get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
 
-    valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out)
+    valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, n_inputs,
+                                     n_out)
     assert len(valid_inputs) == n_out + n_inputs + n_rows * n_columns
 
     for k, v in valid_inputs.items():
@@ -132,6 +141,7 @@ def test__get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
             assert v
         else:
             assert not v
+
 
 def test__get_valid_inputs_edge_case():
     valid_inputs = _get_valid_inputs(1, 2, 1, 1, 1)

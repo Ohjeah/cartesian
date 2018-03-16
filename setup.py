@@ -24,10 +24,14 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "requirements.txt"), "r") as f:
     REQUIRED = f.readlines()
 
+with open(os.path.join(here, "README.md"), "r") as f:
+    LONG_DESCRIPTION = f.read()
+
 setup(
     name=NAME,
     description=DESCRIPTION,
-    long_description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
     author=AUTHOR,
     author_email=EMAIL,
     url=URL,
@@ -37,5 +41,4 @@ setup(
     use_scm_version=True,
     setup_requires=["setuptools_scm", "setuptools_scm_git_archive"],
     license=LICENSE,
-    classifiers=CLASSIFIERS
-)
+    classifiers=CLASSIFIERS)

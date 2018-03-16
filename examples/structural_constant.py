@@ -24,9 +24,16 @@ y += 0.05 * rng.normal(size=y.shape)
 def func(individual):
     f = compile(individual)
     yhat = f(*x.T)
-    return np.sqrt(np.mean((y - yhat)**2))/(y.max() - y.min())
+    return np.sqrt(np.mean((y - yhat)**2)) / (y.max() - y.min())
 
 
-MyCartesian = Cartesian("MyCartesian", pset, n_rows=3, n_columns=4, n_out=1, n_back=1)
-res = oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, max_nfev=50000, n_jobs=1)
+MyCartesian = Cartesian(
+    "MyCartesian", pset, n_rows=3, n_columns=4, n_out=1, n_back=1)
+res = oneplus(
+    func,
+    cls=MyCartesian,
+    f_tol=0.01,
+    random_state=rng,
+    max_nfev=50000,
+    n_jobs=1)
 print(res)

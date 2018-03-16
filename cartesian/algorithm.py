@@ -24,9 +24,15 @@ def return_opt_result(f, individual):
     return res
 
 
-def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
-            max_nfev=None, f_tol=0, n_jobs=1, seed=None):
-
+def oneplus(fun,
+            random_state=None,
+            cls=None,
+            lambda_=4,
+            max_iter=100,
+            max_nfev=None,
+            f_tol=0,
+            n_jobs=1,
+            seed=None):
     """
     1 + lambda algorithm.
     In each generation, create lambda offspring and compare their fitness to the parent individual.
@@ -58,22 +64,39 @@ def oneplus(fun, random_state=None, cls=None, lambda_=4, max_iter=100,
     best_res = return_opt_result(fun, best)
 
     nfev = best_res.nfev
-    res = OptimizeResult(expr=best, x=best_res.x, fun=best_res.fun, nit=0, nfev=nfev, success=False)
+    res = OptimizeResult(
+        expr=best,
+        x=best_res.x,
+        fun=best_res.fun,
+        nit=0,
+        nfev=nfev,
+        success=False)
 
     if best_res.fun <= f_tol:
         res["success"] = True
         return res
 
     for i in range(1, max_iter):
-        offspring = [point_mutation(best, random_state=random_state) for _ in range(lambda_)]
+        offspring = [
+            point_mutation(best, random_state=random_state)
+            for _ in range(lambda_)
+        ]
 
         # with Parallel(n_jobs=n_jobs) as parallel:
         #         offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
         offspring_fitness = [return_opt_result(fun, o) for o in offspring]
-        best, best_res = min(zip(offspring + [best], offspring_fitness + [best_res]), key=lambda x: x[1].fun)
+        best, best_res = min(
+            zip(offspring + [best], offspring_fitness + [best_res]),
+            key=lambda x: x[1].fun)
         nfev += sum(of.nfev for of in offspring_fitness)
 
-        res = OptimizeResult(expr=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False)
+        res = OptimizeResult(
+            expr=best,
+            x=best_res.x,
+            fun=best_res.fun,
+            nit=i,
+            nfev=nfev,
+            success=False)
         if res.fun <= f_tol:
             res["success"] = True
             return res
@@ -92,6 +115,7 @@ def optimize(fun, individual):
     :return: scipy.optimize.OptimizeResult
     """
     f = compile(individual)
+
     def h(consts=()):
         return fun(f, consts)
 
@@ -108,8 +132,10 @@ def optimize(fun, individual):
 def optimize_constants(fun):
     """Wrap a measure with constant optimization.
     """
+
     @wraps(fun)
     def inner(individual):
         res = optimize(fun, individual)
         return res
+
     return inner

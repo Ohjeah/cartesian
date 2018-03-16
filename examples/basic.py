@@ -24,9 +24,16 @@ def func(individual):
     return np.sqrt(np.mean((y - yhat)**2))
 
 
-MyCartesian = Cartesian("MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
+MyCartesian = Cartesian(
+    "MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
 
-res = oneplus(func, f_tol=0.1, cls=MyCartesian, random_state=rng, max_iter=10000, n_jobs=1)
+res = oneplus(
+    func,
+    f_tol=0.1,
+    cls=MyCartesian,
+    random_state=rng,
+    max_iter=10000,
+    n_jobs=1)
 print(res)
 print(to_polish(res.expr, return_args=False))
 print(type(res.expr))

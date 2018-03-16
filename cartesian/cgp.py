@@ -13,6 +13,7 @@ from cartesian.util import make_it
 
 class Primitive(object):
     """Base class"""
+
     def __init__(self, name, function, arity):
         """
         :param name: for text representation
@@ -57,8 +58,8 @@ class Ephemeral(Primitive):
        only execute the function once. Values are lost during copying.
 
     """
-    def __init__(self, name, function):
 
+    def __init__(self, name, function):
         """
         :param name: for text representation
         :param function: callback(), should return a random numeric values.
@@ -97,7 +98,9 @@ class Structural(Primitive):
         return len(re.split(regex, expr))
 
 
-PrimitiveSet = namedtuple("PrimitiveSet", "operators terminals max_arity mapping imapping context symbols")
+PrimitiveSet = namedtuple(
+    "PrimitiveSet",
+    "operators terminals max_arity mapping imapping context symbols")
 
 
 def create_pset(primitives):
@@ -112,15 +115,25 @@ def create_pset(primitives):
     else:
         max_arity = 0
 
-    mapping = {i: prim for i, prim in enumerate(sorted(symbols, key=attrgetter("name"))
-                  + sorted(non_symbols, key=attrgetter("name"))
-                  + sorted(operators, key=attrgetter("name")))}
+    mapping = {
+        i: prim
+        for i, prim in enumerate(
+            sorted(symbols, key=attrgetter("name")) +
+            sorted(non_symbols, key=attrgetter("name")) +
+            sorted(operators, key=attrgetter("name")))
+    }
 
     imapping = {v: k for k, v in mapping.items()}
     context = {f.name: f.function for f in operators}
 
-    return PrimitiveSet(operators=operators, terminals=terminals, imapping=imapping,
-                        max_arity=max_arity, mapping=mapping, context=context, symbols=symbols)
+    return PrimitiveSet(
+        operators=operators,
+        terminals=terminals,
+        imapping=imapping,
+        max_arity=max_arity,
+        mapping=mapping,
+        context=context,
+        symbols=symbols)
 
 
 def _make_map(*lists):
@@ -132,7 +145,7 @@ def _make_map(*lists):
 
 
 def _code_index(n_in, n_row, c, r):
-    return n_in + c*n_row + r
+    return n_in + c * n_row + r
 
 
 def _out_index(n_rows, n_columns, n_in, o):
@@ -152,11 +165,12 @@ def _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
             i = _code_index(n_inputs, n_rows, c, r)
             inputs[i] = list(range(min_, max_)) + list(range(n_inputs))
 
-    min_ = min(max(0, (n_columns-n_back-1)*n_rows), n_inputs)
+    min_ = min(max(0, (n_columns - n_back - 1) * n_rows), n_inputs)
     max_ = max(inputs)
 
     for o in range(n_out):
-        inputs[o + max_ + 1] = list(range(min_, max_ + 1)) + list(range(n_inputs))
+        inputs[o + max_ +
+               1] = list(range(min_, max_ + 1)) + list(range(n_inputs))
 
     for k, v in inputs.items():
         inputs[k] = list(set(v))
@@ -175,7 +189,11 @@ class Base(TransformerMixin):
 
     @property
     def mapping(self):
-        return {i: (el, c, r, l) for i, el, c, r, l in _make_map(self.inputs, *self.code, self.outputs)}
+        return {
+            i: (el, c, r, l)
+            for i, el, c, r, l in _make_map(self.inputs, *self.code,
+                                            self.outputs)
+        }
 
     def __getitem__(self, index):
         return self.mapping[index][0]
@@ -233,11 +251,17 @@ class Base(TransformerMixin):
             for j in range(cls.n_rows):
                 index = _code_index(n_in, cls.n_rows, i, j)
                 in_ = cls._valid_inputs[index]
-                gene = [random_state.choice(operator_keys)] + [random_state.choice(in_) for _ in range(cls.pset.max_arity)]
+                gene = [random_state.choice(operator_keys)] + [
+                    random_state.choice(in_)
+                    for _ in range(cls.pset.max_arity)
+                ]
                 column.append(gene)
             code.append(column)
-        outputs = [random_state.choice(cls._valid_inputs[_out_index(cls.n_rows, cls.n_columns, n_in, o)])
-                   for o in range(cls.n_out)]
+        outputs = [
+            random_state.choice(cls._valid_inputs[_out_index(
+                cls.n_rows, cls.n_columns, n_in, o)])
+            for o in range(cls.n_out)
+        ]
         return cls(code, outputs)
 
 
@@ -245,18 +269,43 @@ class Cartesian(type):
     """
     Meta class to set class parameters and primitive set.
     """
-    def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, len(primitive_set.terminals), n_out)
-        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows,
-                   n_back=n_back, n_out=n_out, _valid_inputs=valid_inputs)
+
+    def __new__(mcs,
+                name,
+                primitive_set,
+                n_columns=3,
+                n_rows=1,
+                n_back=1,
+                n_out=1):
+        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back,
+                                         len(primitive_set.terminals), n_out)
+        dct = dict(
+            pset=primitive_set,
+            n_columns=n_columns,
+            n_rows=n_rows,
+            n_back=n_back,
+            n_out=n_out,
+            _valid_inputs=valid_inputs)
         cls = super().__new__(mcs, name, (Base, ), dct)
         setattr(sys.modules[__name__], name, cls)
         return cls
 
-    def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, len(primitive_set.terminals), n_out)
-        dct = dict(pset=primitive_set, n_columns=n_columns, n_rows=n_rows,
-                   n_back=n_back, n_out=n_out, _valid_inputs=valid_inputs)
+    def __init__(cls,
+                 name,
+                 primitive_set,
+                 n_columns=3,
+                 n_rows=1,
+                 n_back=1,
+                 n_out=1):
+        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back,
+                                         len(primitive_set.terminals), n_out)
+        dct = dict(
+            pset=primitive_set,
+            n_columns=n_columns,
+            n_rows=n_rows,
+            n_back=n_back,
+            n_out=n_out,
+            _valid_inputs=valid_inputs)
         super().__init__(name, (Base, ), dct)
 
 
@@ -278,13 +327,15 @@ def point_mutation(individual, random_state=None):
         new_gene = gene[:]
         j = random_state.randint(0, len(gene))
         if j == 0:  # function
-            new_j = individual.pset.imapping[random_state.choice(individual.pset.operators)]
-        else:       # input
+            new_j = individual.pset.imapping[random_state.choice(
+                individual.pset.operators)]
+        else:  # input
             new_j = random_state.choice(individual._valid_inputs[i])
         new_gene[j] = new_j
 
-    else: # output gene
-        new_gene = random_state.randint(0, len(individual) - individual.n_out - 1)
+    else:  # output gene
+        new_gene = random_state.randint(0,
+                                        len(individual) - individual.n_out - 1)
     new_individual = copy.copy(individual)
     new_individual[i] = new_gene
     return new_individual
@@ -306,6 +357,7 @@ def to_polish(c, return_args=True):
     """
     primitives = c.pset.mapping
     used_arguments = set()
+
     def h(g):
         gene = make_it(c[g])
         primitive = primitives[next(gene)]
@@ -326,11 +378,13 @@ def to_polish(c, return_args=True):
                 return "{}()".format(primitive.name)
 
         elif isinstance(primitive, Structural):
-            return c.format(primitive.function(*[h(a) for a, _ in zip(gene, range(primitive.arity))]))
+            return c.format(
+                primitive.function(
+                    *[h(a) for a, _ in zip(gene, range(primitive.arity))]))
 
         else:
-            return "{}({})".format(primitive.name,
-                                   ", ".join(h(a) for a, _ in zip(gene, range(primitive.arity))))
+            return "{}({})".format(primitive.name, ", ".join(
+                h(a) for a, _ in zip(gene, range(primitive.arity))))
 
     polish = [h(o) for o in c.outputs]
 
@@ -353,11 +407,15 @@ def boilerplate(c, used_arguments=()):
     """
     mapping = c.pset.mapping
     if used_arguments:
-        index = sorted([k for (k, v) in mapping.items() if v in used_arguments])
+        index = sorted(
+            [k for (k, v) in mapping.items() if v in used_arguments])
         args = [mapping[i] for i in index]
     else:
         args = [mapping[i] for i in c.inputs]
-    args_ = [a for a in args if isinstance(a, Symbol) and not isinstance(a, Constant)]
+    args_ = [
+        a for a in args
+        if isinstance(a, Symbol) and not isinstance(a, Constant)
+    ]
     args_ += [a for a in args if isinstance(a, Constant)]
     return "lambda {}:".format(", ".join(a.name for a in args_))
 
