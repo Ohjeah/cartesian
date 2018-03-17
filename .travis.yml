@@ -9,6 +9,7 @@ script:
 after_success:
   - codecov
 deploy:
+  skip_cleanup: true
   provider: pypi
   user: ohjeah
   password: $PYPI_PW
