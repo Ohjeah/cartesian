@@ -17,7 +17,7 @@ CLASSIFIERS = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     "Topic :: Scientific/Engineering :: Mathematics",
-],
+]
 
 here = os.path.abspath(os.path.dirname(__file__))
 
