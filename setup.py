@@ -8,7 +8,7 @@ DESCRIPTION = "Minimal cartesian genetic programming for symbolic regression."
 URL = "https://github.com/ohjeah/cartesian"
 EMAIL = "info@markusqua.de"
 AUTHOR = "Markus Quade"
-PYTHON = ">=3.5"
+PYTHON = ">=3.6"
 LICENSE = "LGPL"
 CLASSIFIERS = [
     "Programming Language :: Python",
