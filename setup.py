@@ -12,7 +12,6 @@ PYTHON = ">=3.5"
 LICENSE = "LGPL"
 CLASSIFIERS = [
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
