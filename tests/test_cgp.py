@@ -15,7 +15,7 @@ def test_PrimitiveSet(pset):
         1: pset.terminals[0],
         2: pset.terminals[1],
         0: pset.terminals[2],
-        3: pset.operators[0]
+        3: pset.operators[0],
     }
     assert pset.max_arity == 1
     assert pset.context[pset.operators[0].name] == operator.neg
@@ -47,8 +47,8 @@ def test_to_polish(individual):
 def test_boilerplate(individual):
     assert boilerplate(individual) == "lambda x_0, x_1, c:"
     assert boilerplate(
-        individual,
-        used_arguments=[individual.pset.terminals[0]]) == "lambda x_0:"
+        individual, used_arguments=[individual.pset.terminals[0]]
+    ) == "lambda x_0:"
 
 
 def test_compile(individual):
@@ -59,12 +59,10 @@ def test_compile(individual):
 def test_point_mutation(individual):
     for _ in range(20):
         new_individual = point_mutation(individual)
-
         assert new_individual.inputs is not individual.inputs
         assert new_individual.inputs == individual.inputs
         assert new_individual.code is not individual.code
         assert new_individual.outputs is not individual.outputs
-
         changes = 0
         if new_individual.outputs != individual.outputs:
             changes += 1
@@ -72,7 +70,6 @@ def test_point_mutation(individual):
             for c11, c22 in zip(c1, c2):
                 if c11 != c22:
                     changes += 1
-
         assert 0 <= changes <= 1
 
 
@@ -87,7 +84,6 @@ def test_Cartesian_copy(individual):
     new = individual.clone()
     with pytest.raises(KeyError):
         new.memory[0]
-
     assert new.code == individual.code
     assert new.code is not individual.code
     assert new.outputs == individual.outputs
@@ -96,10 +92,10 @@ def test_Cartesian_copy(individual):
 
 def test_ephemeral_constant():
     import random
+
     terminals = [Symbol("x_0"), Symbol("x_1")]
     operators = [Ephemeral("c", random.random)]
     pset = create_pset(terminals + operators)
-
     MyClass = Cartesian("MyClass", pset)
     ind1 = MyClass([[2, 0]], [2])
     s1 = to_polish(ind1, return_args=False)
@@ -117,7 +113,6 @@ def test_structural_constant_cls(sc):
 def test_structural_constant_to_polish(sc):
     primitives = [Symbol("x_0"), sc]
     pset = create_pset(primitives)
-
     MyClass = Cartesian("MyClass", pset)
     ind = MyClass([[[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]], [2])
     assert to_polish(ind, return_args=False) == ["1.0"]
@@ -128,13 +123,11 @@ def test_structural_constant_to_polish(sc):
     n_columns=integers(1, 5),
     n_back=integers(1, 5),
     n_inputs=integers(1, 5),
-    n_out=integers(1, 5))
+    n_out=integers(1, 5),
+)
 def test__get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
-
-    valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, n_inputs,
-                                     n_out)
+    valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out)
     assert len(valid_inputs) == n_out + n_inputs + n_rows * n_columns
-
     for k, v in valid_inputs.items():
         assert all(i >= 0 for i in v)
         if k >= n_inputs:

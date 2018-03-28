@@ -6,21 +6,20 @@ from sklearn.utils.validation import check_array, check_random_state
 from .cgp import create_pset, Symbol, Primitive, Constant, compile, Cartesian
 from .algorithm import oneplus, optimize
 
-DEFAULT_PRIMITIVES = [
-    Primitive("add", np.add, 2),
-    Primitive("mul", np.multiply, 2)
-]
+DEFAULT_PRIMITIVES = [Primitive("add", np.add, 2), Primitive("mul", np.multiply, 2)]
 
 
 def _ensure_1d(yhat, shape):
     try:
         yhat.shape[1]
         return yhat
+
     except:
         return np.ones(shape) * yhat
 
 
 class evaluate:  # ugly construct s.th. you can pickle it and use joblib
+
     def __init__(self, x, y, metric):
         self.n_samples, *out = y.shape
         self.multi_output = True if out else False
@@ -30,11 +29,11 @@ class evaluate:  # ugly construct s.th. you can pickle it and use joblib
 
     def error(self, f, consts=()):
         if self.multi_output:
-            yhat = np.array([
-                _ensure_1d(i, self.n_samples) for i in f(*self.x.T, *consts)
-            ]).T
+            yhat = np.array(
+                [_ensure_1d(i, self.n_samples) for i in f(* self.x.T, *consts)]
+            ).T
         else:
-            yhat = _ensure_1d(f(*self.x.T, *consts), self.n_samples)
+            yhat = _ensure_1d(f(* self.x.T, *consts), self.n_samples)
         return self.metric(self.y, yhat)
 
     def __call__(self, individual):
@@ -44,20 +43,22 @@ class evaluate:  # ugly construct s.th. you can pickle it and use joblib
 class Symbolic(BaseEstimator, RegressorMixin):
     """Wraps the 1 + lambda algorithm in sklearn api"""
 
-    def __init__(self,
-                 operators=None,
-                 n_const=0,
-                 n_rows=1,
-                 n_columns=3,
-                 n_back=1,
-                 max_iter=1000,
-                 max_nfev=10000,
-                 lambda_=4,
-                 f_tol=0,
-                 seed=None,
-                 random_state=None,
-                 n_jobs=1,
-                 metric=mean_squared_error):
+    def __init__(
+        self,
+        operators=None,
+        n_const=0,
+        n_rows=1,
+        n_columns=3,
+        n_back=1,
+        max_iter=1000,
+        max_nfev=10000,
+        lambda_=4,
+        f_tol=0,
+        seed=None,
+        random_state=None,
+        n_jobs=1,
+        metric=mean_squared_error,
+    ):
         """
         :param operators: list of primitive excluding terminals
         :param n_const: number of symbolic constants
@@ -85,7 +86,6 @@ class Symbolic(BaseEstimator, RegressorMixin):
         self.pset = None
         self.res = None
         self.model = None
-
         # parameters for algorithm
         self.max_nfev = max_nfev
         self.max_iter = max_iter
@@ -108,8 +108,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
             n_rows=self.n_rows,
             n_columns=self.n_columns,
             n_out=self.n_out,
-            n_back=self.n_back)
-
+            n_back=self.n_back,
+        )
         self.res = oneplus(
             evaluate(x, y, self.metric),
             random_state=self.random_state,
@@ -119,17 +119,16 @@ class Symbolic(BaseEstimator, RegressorMixin):
             max_nfev=self.max_nfev,
             f_tol=self.f_tol,
             n_jobs=self.n_jobs,
-            seed=self.seed)
-
+            seed=self.seed,
+        )
         self.model = compile(self.res.expr)
         return self
 
     def predict(self, x):
         if self.n_out > 1:
-            yhat = np.array([
-                _ensure_1d(i, x.shape[0])
-                for i in self.model(*x.T, *self.res.x)
-            ]).T
+            yhat = np.array(
+                [_ensure_1d(i, x.shape[0]) for i in self.model(* x.T, * self.res.x)]
+            ).T
         else:
-            yhat = _ensure_1d(self.model(*x.T, *self.res.x), x.shape[0])
+            yhat = _ensure_1d(self.model(* x.T, * self.res.x), x.shape[0])
         return yhat
