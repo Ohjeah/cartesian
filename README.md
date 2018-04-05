@@ -10,7 +10,7 @@ It is meant to be used in conjunction with [deap](https://github.com/DEAP/deap) 
 The basic components are provided:
 - data structure
 - 1+4 Algorithm
-- symbolic, ephemeral and structured constants
+- symbolic, ephemeral random and structure-based constants
 
 
 ## Installation
