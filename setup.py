@@ -8,7 +8,7 @@ URL = "https://github.com/ohjeah/cartesian"
 EMAIL = "info@markusqua.de"
 AUTHOR = "Markus Quade"
 PYTHON = ">=3.6"
-LICENSE = "LGPL"
+LICENSE = "MIT"
 CLASSIFIERS = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.6",
