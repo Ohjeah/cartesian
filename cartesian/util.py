@@ -7,5 +7,5 @@ def make_it(x):
         return iter(x)
 
     except TypeError:
-        x = x,
+        x = (x,)
         return iter(x)

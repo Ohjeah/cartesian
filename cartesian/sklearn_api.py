@@ -19,7 +19,6 @@ def _ensure_1d(yhat, shape):
 
 
 class evaluate:  # ugly construct s.th. you can pickle it and use joblib
-
     def __init__(self, x, y, metric):
         self.n_samples, *out = y.shape
         self.multi_output = True if out else False
@@ -30,10 +29,10 @@ class evaluate:  # ugly construct s.th. you can pickle it and use joblib
     def error(self, f, consts=()):
         if self.multi_output:
             yhat = np.array(
-                [_ensure_1d(i, self.n_samples) for i in f(* self.x.T, *consts)]
+                [_ensure_1d(i, self.n_samples) for i in f(*self.x.T, *consts)]
             ).T
         else:
-            yhat = _ensure_1d(f(* self.x.T, *consts), self.n_samples)
+            yhat = _ensure_1d(f(*self.x.T, *consts), self.n_samples)
         return self.metric(self.y, yhat)
 
     def __call__(self, individual):
@@ -57,7 +56,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
         seed=None,
         random_state=None,
         n_jobs=1,
-        metric=mean_squared_error,
+        metric=None,
     ):
         """
         :param operators: list of primitive excluding terminals
@@ -91,7 +90,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
         self.max_iter = max_iter
         self.lambda_ = lambda_
         self.f_tol = f_tol
-        self.metric = metric
+        self.metric = metric if metric is not None else mean_squared_error
         self.random_state = check_random_state(random_state)
         self.n_jobs = n_jobs
         self.seed = seed
@@ -127,8 +126,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
     def predict(self, x):
         if self.n_out > 1:
             yhat = np.array(
-                [_ensure_1d(i, x.shape[0]) for i in self.model(* x.T, * self.res.x)]
+                [_ensure_1d(i, x.shape[0]) for i in self.model(*x.T, *self.res.x)]
             ).T
         else:
-            yhat = _ensure_1d(self.model(* x.T, * self.res.x), x.shape[0])
+            yhat = _ensure_1d(self.model(*x.T, *self.res.x), x.shape[0])
         return yhat

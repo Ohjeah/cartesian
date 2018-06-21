@@ -30,6 +30,7 @@ class Symbol(Primitive):
     Base class for variables.
     Will always be used in the boilerplate ensuring a uniform signature, even if variable is not used in the genotype.
     """
+
     arity = 0
 
     def __init__(self, name):
@@ -42,6 +43,7 @@ class Constant(Symbol):
     Will be used for constant optimization.
     Boilerplate: will only appear when used.
     """
+
     pass
 
 
@@ -83,7 +85,7 @@ class Structural(Primitive):
         self.arity = arity
 
     def function(self, *args):
-        return self._function(* map(self.get_len, args))
+        return self._function(*map(self.get_len, args))
 
     @staticmethod
     def get_len(expr, tokens="(,"):
@@ -115,9 +117,9 @@ def create_pset(primitives):
     mapping = {
         i: prim
         for i, prim in enumerate(
-            sorted(symbols, key=attrgetter("name")) +
-            sorted(non_symbols, key=attrgetter("name")) +
-            sorted(operators, key=attrgetter("name"))
+            sorted(symbols, key=attrgetter("name"))
+            + sorted(non_symbols, key=attrgetter("name"))
+            + sorted(operators, key=attrgetter("name"))
         )
     }
     imapping = {v: k for k, v in mapping.items()}
@@ -172,11 +174,10 @@ def _get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
 
 
 class Base(TransformerMixin):
-
     def __init__(self, code, outputs):
         self.n_inputs = len(self.pset.terminals)
         self.inputs = list(range(self.n_inputs))
-        self.symbols = self.inputs[:len(self.pset.symbols)]
+        self.symbols = self.inputs[: len(self.pset.symbols)]
         self.code = code
         self.outputs = outputs
         # Primitives are allowed to write their name values for storage
@@ -186,7 +187,7 @@ class Base(TransformerMixin):
     def mapping(self):
         return {
             i: (el, c, r, l)
-            for i, el, c, r, l in _make_map(self.inputs, * self.code, self.outputs)
+            for i, el, c, r, l in _make_map(self.inputs, *self.code, self.outputs)
         }
 
     def __getitem__(self, index):
@@ -227,7 +228,7 @@ class Base(TransformerMixin):
         return self
 
     def transform(self, x, y=None):
-        return self._transform(* x.T)
+        return self._transform(*x.T)
 
     @classmethod
     def create(cls, random_state=None):
@@ -364,7 +365,7 @@ def to_polish(c, return_args=True):
         elif isinstance(primitive, Structural):
             return c.format(
                 primitive.function(
-                    * [h(a) for a, _ in zip(gene, range(primitive.arity))]
+                    *[h(a) for a, _ in zip(gene, range(primitive.arity))]
                 )
             )
 
