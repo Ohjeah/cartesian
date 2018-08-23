@@ -33,7 +33,7 @@ add_module_names = True
 add_function_parentheses = False
 todo_include_todos = True
 
-# html_theme = 'alabaster'
+html_theme = 'alabaster'
 html_theme_options = {
     'show_powered_by': False,
     'github_user': 'Ohjeah',
