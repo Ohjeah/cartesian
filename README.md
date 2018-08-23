@@ -1,7 +1,7 @@
 **cartesian**: is a lightweight implementation of Cartesian genetic programming with symbolic regression in mind.
 
  [![](https://travis-ci.org/Ohjeah/cartesian.svg?branch=master)](https://travis-ci.org/Ohjeah/cartesian) [![](https://codecov.io/gh/Ohjeah/cartesian/branch/master/graph/badge.svg)](https://codecov.io/gh/Ohjeah/cartesian) [![PyPI](https://img.shields.io/pypi/v/cartesian.svg)](https://pypi.python.org/pypi/cartesian) [![DOI](https://zenodo.org/badge/79949716.svg)](https://zenodo.org/badge/latestdoi/79949716)
- [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+ [![Documentation Status](https://readthedocs.org/projects/cartesian/badge/?version=latest)](https://cartesian.readthedocs.io/en/latest/?badge=latest) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 ***
 

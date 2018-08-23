@@ -4,18 +4,19 @@ from functools import wraps
 import numpy as np
 from sklearn.utils.validation import check_random_state
 from scipy.optimize import OptimizeResult, minimize
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 
-from .cgp import Base, point_mutation, compile, to_polish, Constant
+from .cgp import point_mutation, compile, to_polish, Constant
 
 
 def return_opt_result(f, individual):
     """
     Ensure that f returns a scipy.optimize.OptimizeResult
 
-    :param f: `callable(individual`
+    :param f: callable(individual)
     :param individual: instance of cartesian.cgp.Base
     :type individual: instance of cartesian.cgp.Cartesian
+
     :return: OptimizeResult
     """
     res = f(individual)
@@ -41,7 +42,7 @@ def oneplus(
     The fittest individual carries over to the next generation. In case of a draw, the offspring is prefered.
 
 
-    :param fun: `callable(individual)`, function to be optimized
+    :param fun: callable(individual), function to be optimized
     :param random_state: an instance of np.random.RandomState, a seed integer or None
     :param cls: The base class for individuals
     :type cls: (optional) instance of cartesian.cgp.Cartesian

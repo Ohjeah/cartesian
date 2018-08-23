@@ -14,7 +14,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "License :: OSI Approved :: MIT License",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 with open(CURRENT_DIR / "requirements.txt", "r") as f:
