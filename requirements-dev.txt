@@ -10,3 +10,4 @@ setuptools>=38.6.0
 sphinx
 #alabaster
 sphinx_rtd_theme
+sphinxcontrib-apidoc
