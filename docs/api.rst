@@ -1,6 +1,15 @@
 cartesian package
 =================
 
+Module contents
+---------------
+
+.. automodule:: cartesian
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 Submodules
 ----------
 
@@ -32,15 +41,6 @@ cartesian.util module
 ---------------------
 
 .. automodule:: cartesian.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: cartesian
     :members:
     :undoc-members:
     :show-inheritance:

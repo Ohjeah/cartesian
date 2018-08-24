@@ -6,7 +6,10 @@ from sklearn.utils.validation import check_array, check_random_state
 from .cgp import create_pset, Symbol, Primitive, Constant, compile, Cartesian
 from .algorithm import oneplus, optimize
 
-DEFAULT_PRIMITIVES = [Primitive("add", np.add, 2), Primitive("mul", np.multiply, 2)]
+DEFAULT_PRIMITIVES = [
+    Primitive("add", np.add, 2),
+    Primitive("mul", np.multiply, 2)
+]
 
 
 def _ensure_1d(yhat, shape):
@@ -28,9 +31,9 @@ class evaluate:  # ugly construct s.th. you can pickle it and use joblib
 
     def error(self, f, consts=()):
         if self.multi_output:
-            yhat = np.array(
-                [_ensure_1d(i, self.n_samples) for i in f(*self.x.T, *consts)]
-            ).T
+            yhat = np.array([
+                _ensure_1d(i, self.n_samples) for i in f(*self.x.T, *consts)
+            ]).T
         else:
             yhat = _ensure_1d(f(*self.x.T, *consts), self.n_samples)
         return self.metric(self.y, yhat)
@@ -40,25 +43,24 @@ class evaluate:  # ugly construct s.th. you can pickle it and use joblib
 
 
 class Symbolic(BaseEstimator, RegressorMixin):
-    """Wraps the 1 + lambda algorithm in sklearn api"""
-
     def __init__(
-        self,
-        operators=None,
-        n_const=0,
-        n_rows=1,
-        n_columns=3,
-        n_back=1,
-        max_iter=1000,
-        max_nfev=10000,
-        lambda_=4,
-        f_tol=0,
-        seed=None,
-        random_state=None,
-        n_jobs=1,
-        metric=None,
+            self,
+            operators=None,
+            n_const=0,
+            n_rows=1,
+            n_columns=3,
+            n_back=1,
+            max_iter=1000,
+            max_nfev=10000,
+            lambda_=4,
+            f_tol=0,
+            seed=None,
+            random_state=None,
+            n_jobs=1,
+            metric=None,
     ):
-        """
+        """Wraps the 1 + lambda algorithm in sklearn api.
+
         :param operators: list of primitive excluding terminals
         :param n_const: number of symbolic constants
         :param n_rows: number of rows in the code block
@@ -125,9 +127,10 @@ class Symbolic(BaseEstimator, RegressorMixin):
 
     def predict(self, x):
         if self.n_out > 1:
-            yhat = np.array(
-                [_ensure_1d(i, x.shape[0]) for i in self.model(*x.T, *self.res.x)]
-            ).T
+            yhat = np.array([
+                _ensure_1d(i, x.shape[0])
+                for i in self.model(*x.T, *self.res.x)
+            ]).T
         else:
             yhat = _ensure_1d(self.model(*x.T, *self.res.x), x.shape[0])
         return yhat

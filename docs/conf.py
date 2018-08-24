@@ -3,7 +3,6 @@ import sys
 import datetime
 sys.path.insert(0, os.path.abspath('../../'))
 
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
@@ -14,7 +13,7 @@ extensions = [
 templates_path = ['_templates']
 autodoc_default_flags = ['members']
 autodoc_member_order = 'bysource'
-
+autoclass_content = 'init'
 source_suffix = ['.rst']
 
 master_doc = 'index'
@@ -44,7 +43,6 @@ html_theme_options = {
     'description': "",
 }
 
-
 html_sidebars = {
     'index': [
         'about.html',
@@ -66,25 +64,22 @@ html_show_copyright = True
 
 default_role = 'any'
 
-
 import recommonmark
 from recommonmark.parser import CommonMarkParser
 from recommonmark.transform import AutoStructify
 
-source_parsers = {
-    '.md': CommonMarkParser
-}
-
+source_parsers = {'.md': CommonMarkParser}
 
 # app setup hook
 github_doc_root = 'https://github.com/Ohjeah/cartesian/tree/master/docs/'
 
 
 def setup(app):
-    app.add_config_value('recommonmark_config', {
-        'url_resolver': lambda url: github_doc_root + url,
-        'auto_toc_tree_section': 'Contents',
-        'enable_eval_rst': True,
-        'enable_auto_doc_ref': True,
-    }, True)
+    app.add_config_value(
+        'recommonmark_config', {
+            'url_resolver': lambda url: github_doc_root + url,
+            'auto_toc_tree_section': 'Contents',
+            'enable_eval_rst': True,
+            'enable_auto_doc_ref': True,
+        }, True)
     app.add_transform(AutoStructify)
