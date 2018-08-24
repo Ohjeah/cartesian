@@ -36,8 +36,8 @@ def oneplus(
     n_jobs=1,
     seed=None,
 ):
-    """
-    1 + lambda algorithm.
+    """1 + lambda algorithm.
+
     In each generation, create lambda offspring and compare their fitness to the parent individual.
     The fittest individual carries over to the next generation. In case of a draw, the offspring is prefered.
 
@@ -53,10 +53,7 @@ def oneplus(
     :param f_tol: threshold for precision
     :param n_jobs: number of jobs for joblib embarrassingly easy parallel
 
-    :return: scipy.optimize.OptimizeResult with non-standard attributes
-    res.x = values for constants
-    res.expr = expression
-    res.fun = best value for the function
+    :return: scipy.optimize.OptimizeResult with non-standard attributes res.x = values for constants res.expr = expression res.fun = best value for the function
     """
     max_iter = max_nfev if max_nfev else max_iter
     max_nfev = max_nfev or math.inf
@@ -121,8 +118,7 @@ def optimize(fun, individual):
 
 
 def optimize_constants(fun):
-    """Wrap a measure with constant optimization.
-    """
+    """Wrap a measure with constant optimization."""
 
     @wraps(fun)
     def inner(individual):

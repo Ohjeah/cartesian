@@ -67,7 +67,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
         :param n_columns: number of columns in the code block
         :param n_back: number of rows to look back for connections
         :param metric: what to optimize for
-        :param fun: `callable(individual)`, function to be optimized
+        :param fun: callable(individual), function to be optimized
         :param random_state: an instance of np.random.RandomState, a seed integer or None
         :param cls: The base class for individuals
         :type cls: (optional) instance of cartesian.cgp.Cartesian

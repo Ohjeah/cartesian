@@ -19,13 +19,12 @@ CLASSIFIERS = [
 ]
 with open(CURRENT_DIR / "requirements.txt", "r") as f:
     REQUIRED = f.readlines()
-with open(CURRENT_DIR / "README.md", "r", encoding="utf8") as f:
+with open(CURRENT_DIR / "README.rst", "r", encoding="utf8") as f:
     LONG_DESCRIPTION = f.read()
 setup(
     name=NAME,
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    long_description_content_type="text/markdown",
     author=AUTHOR,
     author_email=EMAIL,
     url=URL,

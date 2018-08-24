@@ -8,5 +8,5 @@ setuptools_scm_git_archive
 twine>=1.11.0rc1
 setuptools>=38.6.0
 sphinx
-alabaster
-recommonmark
+#alabaster
+sphinx_rtd_theme

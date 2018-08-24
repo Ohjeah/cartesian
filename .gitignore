@@ -1,6 +1,8 @@
 .pytest_cache
 _build
 .idea
+.vscode
+docs/api
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
