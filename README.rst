@@ -11,9 +11,9 @@ It is meant to be used in conjunction with
 `glyph <https://github.com/Ambrosys/glyph>`__.
 
 The basic components are provided:
-- data structure
-- 1+4 Algorithm
-- symbolic, ephemeral random and structure-based constants
+ - data structure
+ - 1+4 Algorithm
+ - symbolic, ephemeral random and structure-based constants
 
 Installation
 ------------
