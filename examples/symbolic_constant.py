@@ -12,7 +12,7 @@ primitives = [
     Constant("c_1"),
     Constant("c_2"),
 ]
-pset = create_pset(primitives)
+pset = PrimitiveSet.create(primitives)
 rng = check_random_state(42)
 x = rng.normal(size=(100, 2))
 y = x[:, 1] * x[:, 0] + 0.3

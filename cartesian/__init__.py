@@ -6,3 +6,4 @@ except DistributionNotFound:
     pass
 
 from .sklearn_api import Symbolic
+from .cgp import Primitive, Symbol, Structural, Constant, Ephemeral

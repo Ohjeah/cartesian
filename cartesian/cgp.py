@@ -3,8 +3,8 @@ import copy
 import sys
 import re
 from operator import attrgetter
-from collections import namedtuple
 
+from dataclasses import dataclass
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_random_state
 
@@ -12,10 +12,9 @@ from cartesian.util import make_it
 
 
 class Primitive(object):
-    """Base class"""
-
     def __init__(self, name, function, arity):
-        """
+        """Basic build block for cartesian programs.
+
         :param name: for text representation
         :param function:
         :param arity:
@@ -26,62 +25,58 @@ class Primitive(object):
 
 
 class Symbol(Primitive):
-    """
-    Base class for variables.
-    Will always be used in the boilerplate ensuring a uniform signature, even if variable is not used in the genotype.
-    """
-
-    arity = 0
-
     def __init__(self, name):
+        """Base class for variables.
+
+        Will always be used in the boilerplate ensuring a uniform signature.
+        Even if variable is not used in the genotype.
+
+        Args:
+            name: name of the primitive
+        """
         self.name = name
+        self.arity = 0
 
 
 class Constant(Symbol):
-    """
-    Base class for symbolic constants.
+    """Base class for symbolic constants.
+
     Will be used for constant optimization.
     Boilerplate: will only appear when used.
     """
 
-    pass
-
 
 class Ephemeral(Primitive):
-    """
-    Base class for ERC's.
-    ERC's are terminals, but they are implemented as zero arity functions, because they do not need to appear in the
-    argument list of the lambda expression.
+    def __init__(self, name, fun):
+        """Base class for ERC's.
 
-    .. Note ::
+        ERC's are terminals, but they are implemented as zero arity functions, as they do not need to appear in the
+        argument list of the lambda expression.
 
-       Compilation behaviour: Each individual has a dict to store its numeric values. Each position in the code block will
-       only execute the function once. Values are lost during copying.
+        Note:
+            Compilation behaviour: Each individual has a dict to store its numeric values.
+            Each position in the code block will only execute the function once.
+            Values are lost during copying.
 
-    """
-
-    def __init__(self, name, function):
+        Args:
+            name: for text representation
+            fun: callback, should return a random numeric values.
         """
-        :param name: for text representation
-        :param function: callback(), should return a random numeric values.
-        """
-        super().__init__(name, function, 0)
+        super().__init__(name, fun, 0)
 
 
 class Structural(Primitive):
-    """
-    Structural constants are operators which take the graph representation of its arguments
-    and convert it to a numeric value.
-    """
+    def __init__(self, name, fun, arity):
+        """Structural constants are operators which take the graph representation of its arguments
+            and convert it to a numeric value.
 
-    def __init__(self, name, function, arity):
-        """
-        :param name: for text representation
-        :param function:
-        :param arity:
+        Args:
+            name: for text representation
+            fun:
+            arity:
         """
         self.name = name
-        self._function = function
+        self._function = fun
         self.arity = arity
 
     def function(self, *args):
@@ -89,50 +84,72 @@ class Structural(Primitive):
 
     @staticmethod
     def get_len(expr, tokens="(,"):
-        """
-        Get the length of a tree by parsing its polish notation representation
-        :param expr:
-        :param tokens: to split at
-        :return: length of expr
+        """ Get the length of a tree by parsing its polish notation representation
+
+        Args:
+            expr: a formula in polish notation
+            tokens: symbols to split the expression at
+
+        Returns:
+            length of expr
+
         """
         regex = "|".join("\\{}".format(t) for t in tokens)
         return len(re.split(regex, expr))
 
 
-PrimitiveSet = namedtuple(
-    "PrimitiveSet", "operators terminals max_arity mapping imapping context symbols"
-)
+@dataclass
+class PrimitiveSet:
+    """A container holding the primitives and pre-compiled helper attributes.
 
+    Args:
+        operators: all non-terminal primitives (arity > 0)
+        terminals: all terminals
+        max_arity: maximum arity of all terminals. Determines the number of links for each register
+        mapping: sorted and indexed list of the primitive set
+        imapping: inverse of mapping
+        context: links names of primitives to their functions
+        symbols: all sybolic constants
 
-def create_pset(primitives):
-    """Create immutable PrimitiveSet with some attributes for quick lookups"""
-    terminals = [p for p in primitives if p.arity == 0]
-    symbols = [p for p in primitives if isinstance(p, Symbol)]
-    non_symbols = [p for p in terminals if not isinstance(p, Symbol)]
-    operators = [p for p in primitives if p.arity > 0]
-    if operators:
-        max_arity = max(operators, key=attrgetter("arity")).arity
-    else:
-        max_arity = 0
-    mapping = {
-        i: prim
-        for i, prim in enumerate(
-            sorted(symbols, key=attrgetter("name"))
-            + sorted(non_symbols, key=attrgetter("name"))
-            + sorted(operators, key=attrgetter("name"))
+    """
+    operators: list
+    terminals: list
+    mapping: dict
+    imapping: dict
+    context: dict
+    symbols: list
+    max_arity: int
+
+    @classmethod
+    def create(cls, primitives):
+        """Create immutable PrimitiveSet with some attributes for quick lookups"""
+        terminals = [p for p in primitives if p.arity == 0]
+        symbols = [p for p in primitives if isinstance(p, Symbol)]
+        non_symbols = [p for p in terminals if not isinstance(p, Symbol)]
+        operators = [p for p in primitives if p.arity > 0]
+        if operators:
+            max_arity = max(operators, key=attrgetter("arity")).arity
+        else:
+            max_arity = 0
+        mapping = {
+            i: prim
+            for i, prim in enumerate(
+                sorted(symbols, key=attrgetter("name"))
+                + sorted(non_symbols, key=attrgetter("name"))
+                + sorted(operators, key=attrgetter("name"))
+            )
+        }
+        imapping = {v: k for k, v in mapping.items()}
+        context = {f.name: f.function for f in operators}
+        return cls(
+            operators=operators,
+            terminals=terminals,
+            imapping=imapping,
+            max_arity=max_arity,
+            mapping=mapping,
+            context=context,
+            symbols=symbols,
         )
-    }
-    imapping = {v: k for k, v in mapping.items()}
-    context = {f.name: f.function for f in operators}
-    return PrimitiveSet(
-        operators=operators,
-        terminals=terminals,
-        imapping=imapping,
-        max_arity=max_arity,
-        mapping=mapping,
-        context=context,
-        symbols=symbols,
-    )
 
 
 def _make_map(*lists):
@@ -185,19 +202,18 @@ class Base(TransformerMixin):
 
     @property
     def mapping(self):
-        return {
-            i: (el, c, r, l)
-            for i, el, c, r, l in _make_map(self.inputs, *self.code, self.outputs)
-        }
+        """Helper dictionary to index the cartesian registers."""
+        return {i: (el, c, r, l) for i, el, c, r, l in _make_map(self.inputs, *self.code, self.outputs)}
 
     def __getitem__(self, index):
         return self.mapping[index][0]
 
     def __setitem__(self, index, item):
-        el, c, r, l = self.mapping[index]
-        l[r] = item
+        el, c, r, lst = self.mapping[index]
+        lst[r] = item
 
     def __len__(self):
+        """Returs the number of registers in self."""
         return self.n_columns * self.n_rows + self.n_out + self.n_inputs
 
     def __repr__(self):
@@ -219,7 +235,8 @@ class Base(TransformerMixin):
     def clone(self):
         return copy.copy(self)
 
-    def format(self, x):
+    @staticmethod
+    def format(x):
         return "{}".format(x)
 
     def fit(self, x, y=None, **fit_params):
@@ -232,10 +249,16 @@ class Base(TransformerMixin):
 
     @classmethod
     def create(cls, random_state=None):
-        """
+        """Creates a new individual.
+
         Each gene is picked with a uniform distribution from all allowed inputs or functions.
-        :param random_state: an instance of np.random.RandomState, a seed integer or None
-        :return: A random new class instance.
+
+        Args:
+            random_state: an instance of np.random.RandomState, a seed integer or None
+
+        Returns:
+            a new (random) individual
+
         """
         random_state = check_random_state(random_state)
         n_in = len(cls.pset.terminals)
@@ -252,23 +275,17 @@ class Base(TransformerMixin):
                 column.append(gene)
             code.append(column)
         outputs = [
-            random_state.choice(
-                cls._valid_inputs[_out_index(cls.n_rows, cls.n_columns, n_in, o)]
-            )
+            random_state.choice(cls._valid_inputs[_out_index(cls.n_rows, cls.n_columns, n_in, o)])
             for o in range(cls.n_out)
         ]
         return cls(code, outputs)
 
 
 class Cartesian(type):
-    """
-    Meta class to set class parameters and primitive set.
-    """
+    """Meta class to set class parameters and primitive set."""
 
     def __new__(mcs, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        valid_inputs = _get_valid_inputs(
-            n_rows, n_columns, n_back, len(primitive_set.terminals), n_out
-        )
+        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, len(primitive_set.terminals), n_out)
         dct = dict(
             pset=primitive_set,
             n_columns=n_columns,
@@ -282,9 +299,7 @@ class Cartesian(type):
         return cls
 
     def __init__(cls, name, primitive_set, n_columns=3, n_rows=1, n_back=1, n_out=1):
-        valid_inputs = _get_valid_inputs(
-            n_rows, n_columns, n_back, len(primitive_set.terminals), n_out
-        )
+        valid_inputs = _get_valid_inputs(n_rows, n_columns, n_back, len(primitive_set.terminals), n_out)
         dct = dict(
             pset=primitive_set,
             n_columns=n_columns,
@@ -297,13 +312,17 @@ class Cartesian(type):
 
 
 def point_mutation(individual, random_state=None):
-    """
-    Randomly pick a gene in individual and mutate it.
-    The mutation is either rewiring, i.e. changing the inputs, or changing the operator (head of gene)
-    :param individual: instance of Base
-    :type individual: instance of Cartesian
-    :param random_state: an instance of np.random.RandomState, a seed integer or None
-    :return: new instance of Base
+    """Picks a gene at random and mutates it.
+
+    The mutation is either rewiring, i.e. changing the inputs, or changing the operator (head of gene).
+
+    Args:
+        individual: instance of Base
+        random_state: an instance of np.random.RandomState, a seed integer or None
+
+    Returns:
+        mutated individual
+
     """
     random_state = check_random_state(random_state)
     n_terminals = len(individual.pset.terminals)
@@ -314,9 +333,7 @@ def point_mutation(individual, random_state=None):
         new_gene = gene[:]
         j = random_state.randint(0, len(gene))
         if j == 0:  # function
-            new_j = individual.pset.imapping[
-                random_state.choice(individual.pset.operators)
-            ]
+            new_j = individual.pset.imapping[random_state.choice(individual.pset.operators)]
         else:  # input
             new_j = random_state.choice(individual._valid_inputs[i])
         new_gene[j] = new_j
@@ -328,18 +345,20 @@ def point_mutation(individual, random_state=None):
 
 
 def to_polish(c, return_args=True):
-    """
-    Return polish notation of expression encoded by c.
-    Optionally return the used arguments.
+    """Generates the polish notation of expression encoded by c.
 
-    Resolve the outputs recursively.
+    Resolves the outputs recursively.
 
-    .. Note ::
+    Note:
        Function has side-effects on the individual c.
        See Symbols for details
 
-    :param c: instance of Base
-    :type c: instance of Cartesian
+    Args:
+        c: instance of base
+        return_args: optionally return the used arguments too
+
+    Returns:
+        polish notation of expression encoded by c
     """
     primitives = c.pset.mapping
     used_arguments = set()
@@ -363,16 +382,11 @@ def to_polish(c, return_args=True):
                 return "{}()".format(primitive.name)
 
         elif isinstance(primitive, Structural):
-            return c.format(
-                primitive.function(
-                    *[h(a) for a, _ in zip(gene, range(primitive.arity))]
-                )
-            )
+            return c.format(primitive.function(*[h(a) for a, _ in zip(gene, range(primitive.arity))]))
 
         else:
             return "{}({})".format(
-                primitive.name,
-                ", ".join(h(a) for a, _ in zip(gene, range(primitive.arity))),
+                primitive.name, ", ".join(h(a) for a, _ in zip(gene, range(primitive.arity)))
             )
 
     polish = [h(o) for o in c.outputs]
@@ -383,16 +397,18 @@ def to_polish(c, return_args=True):
         return polish
 
 
-def boilerplate(c, used_arguments=()):
-    """
-    Return the overhead needed to compile the polish notation.
+def _boilerplate(c, used_arguments=()):
+    """Generates the overhead needed to compile the polish notation.
 
     If used_arguments are provided, the boilerplate will only include
     the constants which are used as well as all variables.
 
-    :param c: instance of Base
-    :type c: instance of Cartesian
-    :param used_arguments: list of terminals actually used in c.
+    Args:
+        c: instance of Base
+        used_arguments: list of terminals actually used in c.
+
+    Returns: overhead needed to compile the polish notation.
+
     """
     mapping = c.pset.mapping
     if used_arguments:
@@ -406,15 +422,18 @@ def boilerplate(c, used_arguments=()):
 
 
 def compile(c):
-    """
-    :param c: instance of Base
-    :type c: instance of Cartesian
-    :return: lambda function
+    """Transform an individual into a lambda function
+
+    Args:
+        c: instance of Base
+
+    Returns:lambda function
+
     """
     polish, args = to_polish(c, return_args=True)
     for t in c.pset.symbols:
         if not isinstance(t, Constant):
             args.add(t)
-    bp = boilerplate(c, used_arguments=args)
+    bp = _boilerplate(c, used_arguments=args)
     code = "({})".format(", ".join(polish)) if len(polish) > 1 else polish[0]
     return eval(bp + code, c.pset.context)

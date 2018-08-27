@@ -12,7 +12,7 @@ primitives = [
     Symbol("x_1"),
     Structural("SC", (lambda x, y: min(x, y) / max(x, y)), 2),
 ]
-pset = create_pset(primitives)
+pset = PrimitiveSet.create(primitives)
 x = rng.normal(size=(100, 2))
 y = x[:, 1] * x[:, 0] + 0.3
 y += 0.05 * rng.normal(size=y.shape)

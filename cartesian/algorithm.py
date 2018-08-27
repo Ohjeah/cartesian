@@ -4,6 +4,7 @@ from functools import wraps
 import numpy as np
 from sklearn.utils.validation import check_random_state
 from scipy.optimize import OptimizeResult, minimize
+
 # from joblib import Parallel, delayed
 
 from .cgp import point_mutation, compile, to_polish, Constant
@@ -26,15 +27,7 @@ def return_opt_result(f, individual):
 
 
 def oneplus(
-    fun,
-    random_state=None,
-    cls=None,
-    lambda_=4,
-    max_iter=100,
-    max_nfev=None,
-    f_tol=0,
-    n_jobs=1,
-    seed=None,
+    fun, random_state=None, cls=None, lambda_=4, max_iter=100, max_nfev=None, f_tol=0, n_jobs=1, seed=None
 ):
     """1 + lambda algorithm.
 
@@ -61,28 +54,19 @@ def oneplus(
     best = seed or cls.create(random_state=random_state)
     best_res = return_opt_result(fun, best)
     nfev = best_res.nfev
-    res = OptimizeResult(
-        expr=best, x=best_res.x, fun=best_res.fun, nit=0, nfev=nfev, success=False
-    )
+    res = OptimizeResult(expr=best, x=best_res.x, fun=best_res.fun, nit=0, nfev=nfev, success=False)
     if best_res.fun <= f_tol:
         res["success"] = True
         return res
 
     for i in range(1, max_iter):
-        offspring = [
-            point_mutation(best, random_state=random_state) for _ in range(lambda_)
-        ]
+        offspring = [point_mutation(best, random_state=random_state) for _ in range(lambda_)]
         # with Parallel(n_jobs=n_jobs) as parallel:
         #         offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
         offspring_fitness = [return_opt_result(fun, o) for o in offspring]
-        best, best_res = min(
-            zip(offspring + [best], offspring_fitness + [best_res]),
-            key=lambda x: x[1].fun,
-        )
+        best, best_res = min(zip(offspring + [best], offspring_fitness + [best_res]), key=lambda x: x[1].fun)
         nfev += sum(of.nfev for of in offspring_fitness)
-        res = OptimizeResult(
-            expr=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False
-        )
+        res = OptimizeResult(expr=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False)
         if res.fun <= f_tol:
             res["success"] = True
             return res

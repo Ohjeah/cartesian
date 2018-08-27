@@ -9,7 +9,7 @@ from cartesian.cgp import *
 def pset():
     terminals = [Symbol("x_0"), Symbol("x_1"), Constant("c")]
     operators = [Primitive("neg", operator.neg, 1)]
-    pset = create_pset(terminals + operators)
+    pset = PrimitiveSet.create(terminals + operators)
     return pset
 
 

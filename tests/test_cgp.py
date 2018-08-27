@@ -7,7 +7,7 @@ import hypothesis
 from hypothesis.strategies import integers
 
 from cartesian.cgp import *
-from cartesian.cgp import _get_valid_inputs
+from cartesian.cgp import _get_valid_inputs, _boilerplate
 
 
 def test_PrimitiveSet(pset):
@@ -45,10 +45,8 @@ def test_to_polish(individual):
 
 
 def test_boilerplate(individual):
-    assert boilerplate(individual) == "lambda x_0, x_1, c:"
-    assert boilerplate(
-        individual, used_arguments=[individual.pset.terminals[0]]
-    ) == "lambda x_0:"
+    assert _boilerplate(individual) == "lambda x_0, x_1, c:"
+    assert _boilerplate(individual, used_arguments=[individual.pset.terminals[0]]) == "lambda x_0:"
 
 
 def test_compile(individual):
@@ -95,7 +93,7 @@ def test_ephemeral_constant():
 
     terminals = [Symbol("x_0"), Symbol("x_1")]
     operators = [Ephemeral("c", random.random)]
-    pset = create_pset(terminals + operators)
+    pset = PrimitiveSet.create(terminals + operators)
     MyClass = Cartesian("MyClass", pset)
     ind1 = MyClass([[2, 0]], [2])
     s1 = to_polish(ind1, return_args=False)
@@ -112,7 +110,7 @@ def test_structural_constant_cls(sc):
 
 def test_structural_constant_to_polish(sc):
     primitives = [Symbol("x_0"), sc]
-    pset = create_pset(primitives)
+    pset = PrimitiveSet.create(primitives)
     MyClass = Cartesian("MyClass", pset)
     ind = MyClass([[[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]], [2])
     assert to_polish(ind, return_args=False) == ["1.0"]

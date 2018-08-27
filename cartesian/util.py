@@ -1,6 +1,6 @@
 def make_it(x):
-    """
-    Ensure that x is an iterator.
+    """Ensures that x is an iterator.
+
     If x is not iterable, wrap it as a one-elemened tuple.
     """
     try:

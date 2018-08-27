@@ -9,11 +9,11 @@ def test_algorithm_success(individual):
     fun = lambda x: 0
     rng = check_random_state(0)
     res = oneplus(fun, random_state=rng, lambda_=4, max_iter=2, f_tol=-1, cls=cls)
-    assert res.success == False
+    assert not res.success
     res = oneplus(fun, random_state=rng, lambda_=4, max_iter=0, f_tol=0, cls=cls)
-    assert res.success == True
+    assert res.success
     res = oneplus(fun, random_state=rng, lambda_=4, max_nfev=1, f_tol=-1, cls=cls)
-    assert res.success == False
+    assert not res.success
 
 
 def test_algorithm_twin_problem_with_seed(individual):
@@ -23,7 +23,7 @@ def test_algorithm_twin_problem_with_seed(individual):
 
     @optimize_constants
     def fun(f, consts=()):
-        return np.sum((y - f(* x.T, *consts)))
+        return np.sum((y - f(*x.T, *consts)))
 
     res = oneplus(fun, seed=individual)
     assert res.expr == individual
@@ -38,7 +38,7 @@ def test_optimize(individual):
 
     @optimize_constants
     def fun(f, consts=()):
-        return np.sum((f(* x.T, consts)) ** 2)
+        return np.sum((f(*x.T, consts)) ** 2)
 
     res = fun(ind)
     assert res.x < 1e-6
