@@ -54,6 +54,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
         random_state=None,
         n_jobs=1,
         metric=None,
+        callback=None,
     ):
         """Wraps the 1 + lambda algorithm in sklearn api.
 
@@ -75,6 +76,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
             random_state: an instance of np.random.RandomState, an integer used as seed, or None
             n_jobs: number of jobs for joblib embarrassingly easy parallel
             metric: callable(individual), function to be optimized
+            callback: callable(OptimizeResult), can be optionally used to monitor progress
         """
         self.operators = DEFAULT_PRIMITIVES or operators
         self.constants = [Constant("c_{}".format(i)) for i in range(n_const)]
@@ -94,6 +96,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
         self.random_state = check_random_state(random_state)
         self.n_jobs = n_jobs
         self.seeded_individual = seeded_individual
+        self.callback = callback
 
     def fit(self, x, y):
         """Trains the model given the regression task.
@@ -128,6 +131,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
             f_tol=self.f_tol,
             n_jobs=self.n_jobs,
             seed=self.seeded_individual,
+            callback=self.callback
         )
         self.model = compile(self.res.expr)
         return self

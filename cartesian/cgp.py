@@ -327,8 +327,8 @@ def point_mutation(individual, random_state=None):
     random_state = check_random_state(random_state)
     n_terminals = len(individual.pset.terminals)
     i = random_state.randint(n_terminals, len(individual) - 1)
-    el, c, r, l = individual.mapping[i]
-    gene = l[r]
+    el, c, r, lst = individual.mapping[i]
+    gene = lst[r]
     if isinstance(gene, list):
         new_gene = gene[:]
         j = random_state.randint(0, len(gene))

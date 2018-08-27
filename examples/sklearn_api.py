@@ -7,7 +7,13 @@ rng = check_random_state(1337)
 x, y, coef = make_regression(
     n_features=2, n_informative=1, n_targets=1, random_state=rng, coef=True
 )
-print(coef)
+
+
+def log(res):
+    if res.nit % 2 == 0:
+        print(f"Generation: {res.nit}\tCurrent best: {res.expr}")
+
+
 x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=rng)
 est = Symbolic(
     n_const=2,
@@ -15,9 +21,11 @@ est = Symbolic(
     n_columns=5,
     n_rows=2,
     maxfev=100000,
-    n_jobs=-1,
+    n_jobs=1,
     f_tol=1e-4,
+    callback=log,
 )
 est.fit(x_train, y_train)
+print("Final result:")
 print(est.res)
-print(est.score(x_test, y_test))
+print("Test score: ", est.score(x_test, y_test))

@@ -1,13 +1,32 @@
 import operator
 import pickle
+import sys
+import pathlib
 
 import numpy as np
 import pytest
 import hypothesis
-from hypothesis.strategies import integers
+import hypothesis.strategies as s
+from hypothesis.strategies import integers, builds
 
+sys.path.append(pathlib.Path(__name__).parent.as_posix())
+from conftest import pset
 from cartesian.cgp import *
 from cartesian.cgp import _get_valid_inputs, _boilerplate
+
+
+def make_ind(random_state=None, **kwargs):
+    return Cartesian(**kwargs).create(random_state=random_state)
+
+
+ind_strat = builds(make_ind,
+                   name=s.just("Individual"),
+                   primitive_set=s.just(pset()),
+                   n_columns=integers(min_value=1, max_value=10),
+                   n_rows=integers(min_value=1, max_value=10),
+                   n_back=integers(min_value=1, max_value=10),
+                   n_out=integers(min_value=1, max_value=5)
+)
 
 
 def test_PrimitiveSet(pset):
@@ -54,21 +73,22 @@ def test_compile(individual):
     assert f(1, 1) == -1
 
 
+@hypothesis.settings(max_examples=25)
+@hypothesis.given(ind_strat)
 def test_point_mutation(individual):
-    for _ in range(20):
-        new_individual = point_mutation(individual)
-        assert new_individual.inputs is not individual.inputs
-        assert new_individual.inputs == individual.inputs
-        assert new_individual.code is not individual.code
-        assert new_individual.outputs is not individual.outputs
-        changes = 0
-        if new_individual.outputs != individual.outputs:
-            changes += 1
-        for c1, c2 in zip(individual.code, new_individual.code):
-            for c11, c22 in zip(c1, c2):
-                if c11 != c22:
-                    changes += 1
-        assert 0 <= changes <= 1
+    new_individual = point_mutation(individual)
+    assert new_individual.inputs is not individual.inputs
+    assert new_individual.inputs == individual.inputs
+    assert new_individual.code is not individual.code
+    assert new_individual.outputs is not individual.outputs
+    changes = 0
+    if new_individual.outputs != individual.outputs:
+        changes += 1
+    for c1, c2 in zip(individual.code, new_individual.code):
+        for c11, c22 in zip(c1, c2):
+            if c11 != c22:
+                changes += 1
+    assert 0 <= changes <= 1
 
 
 def test_Cartesian_pickle(individual):

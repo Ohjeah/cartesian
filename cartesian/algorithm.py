@@ -5,20 +5,20 @@ import numpy as np
 from sklearn.utils.validation import check_random_state
 from scipy.optimize import OptimizeResult, minimize
 
-# from joblib import Parallel, delayed
+from joblib import Parallel, delayed
 
 from .cgp import point_mutation, compile, to_polish, Constant
 
 
 def return_opt_result(f, individual):
-    """
-    Ensure that f returns a scipy.optimize.OptimizeResult
+    """Ensure that f returns a scipy.optimize.OptimizeResults
 
-    :param f: callable(individual)
-    :param individual: instance of cartesian.cgp.Base
-    :type individual: instance of cartesian.cgp.Cartesian
+    Args:
+        f: callable(individual)
+        individual:  instance of cartesian.cgp.Base
 
-    :return: OptimizeResult
+    Returns:OptimizeResult
+
     """
     res = f(individual)
     if not isinstance(res, OptimizeResult):
@@ -27,26 +27,28 @@ def return_opt_result(f, individual):
 
 
 def oneplus(
-    fun, random_state=None, cls=None, lambda_=4, maxiter=100, maxfev=None, f_tol=0, n_jobs=1, seed=None
+    fun, random_state=None, cls=None, lambda_=4, maxiter=100, maxfev=None, f_tol=0, n_jobs=1, seed=None, callback=None
 ):
     """1 + lambda algorithm.
 
     In each generation, create lambda offspring and compare their fitness to the parent individual.
     The fittest individual carries over to the next generation. In case of a draw, the offspring is prefered.
 
+    Args:
+        fun: callable(individual), function to be optimized
+        random_state: an instance of np.random.RandomState, a seed integer or None
+        cls: base class for individuals
+        lambda_: number of offspring per generation
+        maxiter: maximum number of generations
+        maxfev: maximum number of function evaluations. Important, if fun is another optimizer
+        f_tol: absolute error in metric(ind) between iterations that is acceptable for convergence
+        n_jobs: number of jobs for joblib embarrassingly easy parallel
+        seed: (optional) can be passed instead of cls, used for hot-starts
+        callback: callable(OptimizeResult), can be optionally used to monitor progress
 
-    :param fun: callable(individual), function to be optimized
-    :param random_state: an instance of np.random.RandomState, a seed integer or None
-    :param cls: The base class for individuals
-    :type cls: (optional) instance of cartesian.cgp.Cartesian
-    :param seed: (optional) can be passed instead of cls.
-    :param lambda_: number of offspring per generation
-    :param maxiter: maximum number of generations
-    :param maxfev: maximum number of function evaluations. Important, if fun is another optimizer
-    :param f_tol: threshold for precision
-    :param n_jobs: number of jobs for joblib embarrassingly easy parallel
+    Returns:
+        scipy.optimize.OptimizeResult with non-standard attributes res.x = values for constants res.expr = expression res.fun = best value for the function
 
-    :return: scipy.optimize.OptimizeResult with non-standard attributes res.x = values for constants res.expr = expression res.fun = best value for the function
     """
     maxiter = maxfev if maxfev else maxiter
     maxfev = maxfev or math.inf
@@ -61,12 +63,14 @@ def oneplus(
 
     for i in range(1, maxiter):
         offspring = [point_mutation(best, random_state=random_state) for _ in range(lambda_)]
-        # with Parallel(n_jobs=n_jobs) as parallel:
-        #         offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
+        with Parallel(n_jobs=n_jobs) as parallel:
+                offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
         offspring_fitness = [return_opt_result(fun, o) for o in offspring]
         best, best_res = min(zip(offspring + [best], offspring_fitness + [best_res]), key=lambda x: x[1].fun)
         nfev += sum(of.nfev for of in offspring_fitness)
         res = OptimizeResult(expr=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False)
+        if callback is not None:
+            callback(res)
         if res.fun <= f_tol:
             res["success"] = True
             return res
@@ -78,12 +82,14 @@ def oneplus(
 
 
 def optimize(fun, individual):
-    """
-    Prepare individual and fun to optimize fun(c | individual)
+    """Prepares individual and fun to optimize fun(c | individual)
 
-    :param fun: callable of lambda expression and its constant values.
-    :param individual:
-    :return: scipy.optimize.OptimizeResult
+    Args:
+        fun: callable of lambda expression and its constant values.
+        individual:
+
+    Returns:scipy.optimize.OptimizeResult
+
     """
     f = compile(individual)
 
