@@ -3,6 +3,7 @@ _build
 .idea
 .vscode
 docs/api
+notebooks
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

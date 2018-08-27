@@ -46,8 +46,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
         n_rows=1,
         n_columns=3,
         n_back=1,
-        max_iter=1000,
-        max_nfev=10000,
+        maxiter=1000,
+        maxfev=10000,
         lambda_=4,
         f_tol=0,
         seeded_individual=None,
@@ -67,11 +67,11 @@ class Symbolic(BaseEstimator, RegressorMixin):
             n_rows: number of rows in the code block
             n_columns: number of columns in the code block
             n_back: number of rows to look back for connections
-            max_iter: maximum number of generations
-            max_nfev: maximum number of function evaluations. Important, if fun is another optimizer
+            maxiter: maximum number of generations
+            maxfev: maximum number of function evaluations. Important, if fun is another optimizer
             lambda_: number of offspring per generation
             f_tol: Absolute error in metric(ind) between iterations that is acceptable for convergence
-            seed: an individual used to hot-start the optimization
+            seeded_individual: an individual used to hot-start the optimization
             random_state: an instance of np.random.RandomState, an integer used as seed, or None
             n_jobs: number of jobs for joblib embarrassingly easy parallel
             metric: callable(individual), function to be optimized
@@ -86,8 +86,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
         self.res = None
         self.model = None
         # parameters for algorithm
-        self.max_nfev = max_nfev
-        self.max_iter = max_iter
+        self.maxfev = maxfev
+        self.maxiter = maxiter
         self.lambda_ = lambda_
         self.f_tol = f_tol
         self.metric = metric if metric is not None else mean_squared_error
@@ -123,8 +123,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
             random_state=self.random_state,
             cls=cls,
             lambda_=self.lambda_,
-            max_iter=self.max_iter,
-            max_nfev=self.max_nfev,
+            maxiter=self.maxiter,
+            maxfev=self.maxfev,
             f_tol=self.f_tol,
             n_jobs=self.n_jobs,
             seed=self.seeded_individual,

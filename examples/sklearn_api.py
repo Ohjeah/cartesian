@@ -14,7 +14,7 @@ est = Symbolic(
     random_state=rng,
     n_columns=5,
     n_rows=2,
-    max_nfev=100000,
+    maxfev=100000,
     n_jobs=-1,
     f_tol=1e-4,
 )

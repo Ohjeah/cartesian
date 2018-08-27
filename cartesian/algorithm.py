@@ -27,7 +27,7 @@ def return_opt_result(f, individual):
 
 
 def oneplus(
-    fun, random_state=None, cls=None, lambda_=4, max_iter=100, max_nfev=None, f_tol=0, n_jobs=1, seed=None
+    fun, random_state=None, cls=None, lambda_=4, maxiter=100, maxfev=None, f_tol=0, n_jobs=1, seed=None
 ):
     """1 + lambda algorithm.
 
@@ -41,15 +41,15 @@ def oneplus(
     :type cls: (optional) instance of cartesian.cgp.Cartesian
     :param seed: (optional) can be passed instead of cls.
     :param lambda_: number of offspring per generation
-    :param max_iter: maximum number of generations
-    :param max_nfev: maximum number of function evaluations. Important, if fun is another optimizer
+    :param maxiter: maximum number of generations
+    :param maxfev: maximum number of function evaluations. Important, if fun is another optimizer
     :param f_tol: threshold for precision
     :param n_jobs: number of jobs for joblib embarrassingly easy parallel
 
     :return: scipy.optimize.OptimizeResult with non-standard attributes res.x = values for constants res.expr = expression res.fun = best value for the function
     """
-    max_iter = max_nfev if max_nfev else max_iter
-    max_nfev = max_nfev or math.inf
+    maxiter = maxfev if maxfev else maxiter
+    maxfev = maxfev or math.inf
     random_state = check_random_state(random_state)
     best = seed or cls.create(random_state=random_state)
     best_res = return_opt_result(fun, best)
@@ -59,7 +59,7 @@ def oneplus(
         res["success"] = True
         return res
 
-    for i in range(1, max_iter):
+    for i in range(1, maxiter):
         offspring = [point_mutation(best, random_state=random_state) for _ in range(lambda_)]
         # with Parallel(n_jobs=n_jobs) as parallel:
         #         offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
@@ -71,7 +71,7 @@ def oneplus(
             res["success"] = True
             return res
 
-        elif res.nfev >= max_nfev:
+        elif res.nfev >= maxfev:
             return res
 
     return res
