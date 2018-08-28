@@ -17,7 +17,8 @@ def return_opt_result(f, individual):
         f: callable(individual)
         individual:  instance of cartesian.cgp.Base
 
-    Returns:OptimizeResult
+    Returns:
+        OptimizeResult
 
     """
     res = f(individual)
@@ -88,7 +89,8 @@ def optimize(fun, individual):
         fun: callable of lambda expression and its constant values.
         individual:
 
-    Returns:scipy.optimize.OptimizeResult
+    Returns:
+        scipy.optimize.OptimizeResult
 
     """
     f = compile(individual)

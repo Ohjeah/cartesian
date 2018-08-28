@@ -105,7 +105,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
             x (np.ndarray): input data matrix for fitting of size (number_of_input_points, number_of_features)
             y (np.ndarray): target data vector for fitting of size (number_of_input_points)
 
-        Returns: self
+        Returns:
+            self
 
         """
         x = check_array(x)
@@ -142,7 +143,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
         Args:
             x: input data matrix for scoring
 
-        Returns: predicted target data vector
+        Returns:
+            predicted target data vector
 
         """
         if self.n_out > 1:

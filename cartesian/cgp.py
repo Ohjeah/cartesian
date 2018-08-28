@@ -213,7 +213,7 @@ class Base(TransformerMixin):
         lst[r] = item
 
     def __len__(self):
-        """Returs the number of registers in self."""
+        """Returns the number of registers in self."""
         return self.n_columns * self.n_rows + self.n_out + self.n_inputs
 
     def __repr__(self):
@@ -407,7 +407,8 @@ def _boilerplate(c, used_arguments=()):
         c: instance of Base
         used_arguments: list of terminals actually used in c.
 
-    Returns: overhead needed to compile the polish notation.
+    Returns:
+        overhead needed to compile the polish notation.
 
     """
     mapping = c.pset.mapping
@@ -427,7 +428,8 @@ def compile(c):
     Args:
         c: instance of Base
 
-    Returns:lambda function
+    Returns:
+        lambda function
 
     """
     polish, args = to_polish(c, return_args=True)
