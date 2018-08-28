@@ -29,11 +29,10 @@ extensions = [
 html_sidebars = {
     'index': [
         'sidebarintro.html',
-        'localtoc.html',
     ],
     '**': [
         'sidebarintro.html',
-        'globaltoc.html',
+        'localtoc.html',
         'relations.html',
         'searchbox.html',
     ]
@@ -65,9 +64,6 @@ html_show_copyright = True
 
 default_role = "any"
 
-html_additional_pages = {
-    "sidebarintro": "sidebarintro.html"
-}
 
 # for sidebarintro.html
 html_context = {
@@ -78,6 +74,7 @@ html_context = {
     "github_type": "star",
     "github_count": True,
     "badge_branch": "master",
+    "pypi_project": project,
 }
 
 
