@@ -104,7 +104,6 @@ def optimize(fun, individual):
         res = minimize(h, np.ones_like(constants))
         individual.consts = res.x
         return res
-
     else:
         return OptimizeResult(x=(), fun=h(), nfev=1, nit=0, success=True)
 

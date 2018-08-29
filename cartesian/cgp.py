@@ -357,18 +357,19 @@ def _point_mutation(individual, idx, random_state):
         j = random_state.randint(0, len(gene))
         if j == 0:  # function
             choices = individual.pset.operators[:]
-            if len(choices) > 1:
-                choices.pop(choices.index(gene[j]))
+            if len(choices) > 1:  # don't allow the same function again
+                prim = individual.pset.mapping[gene[j]]
+                choices.pop(choices.index(prim))
             new_j = individual.pset.imapping[random_state.choice(choices)]
         else:  # input
             valid_inputs = individual._valid_inputs[idx][:]
-            if len(valid_inputs) > 1:
+            if len(valid_inputs) > 1: # don't allow the same inputs again
                 valid_inputs.pop(valid_inputs.index(gene[j]))
             new_j = random_state.choice(valid_inputs)
         new_gene[j] = new_j
     else:  # output gene
         new_gene = random_state.randint(0, len(individual) - individual.n_out - 1)
-    new_individual = copy.copy(individual)
+    new_individual = individual.clone()
     new_individual[idx] = new_gene
     return new_individual
 

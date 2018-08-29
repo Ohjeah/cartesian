@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import make_regression
 from sklearn.utils.validation import check_random_state
 from sklearn.model_selection import train_test_split
-from cartesian import Symbolic, Symbol, Primitive, Constant
+from cartesian import Symbolic, Primitive
 
 rng = check_random_state(1337)
 x, y, coef = make_regression(

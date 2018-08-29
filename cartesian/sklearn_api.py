@@ -5,6 +5,7 @@ from sklearn.utils.validation import check_array, check_random_state
 
 from .cgp import PrimitiveSet, Symbol, Primitive, Constant, compile, Cartesian
 from .algorithm import oneplus, optimize
+from .util import replace_nan
 
 DEFAULT_PRIMITIVES = [Primitive("add", np.add, 2), Primitive("mul", np.multiply, 2)]
 
@@ -32,6 +33,7 @@ class _Evaluate:  # ugly construct s.th. you can pickle it and use joblib
             yhat = np.array([_ensure_1d(i, self.n_samples) for i in f(*self.x.T, *consts)]).T
         else:
             yhat = _ensure_1d(f(*self.x.T, *consts), self.n_samples)
+        yhat = replace_nan(yhat)
         return self.metric(self.y, yhat)
 
     def __call__(self, individual):
@@ -78,7 +80,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
             metric: callable(individual), function to be optimized
             callback: callable(OptimizeResult), can be optionally used to monitor progress
         """
-        self.operators = DEFAULT_PRIMITIVES or operators
+        self.operators = operators if operators is not None else DEFAULT_PRIMITIVES
         self.constants = [Constant("c_{}".format(i)) for i in range(n_const)]
         self.n_rows = n_rows
         self.n_back = n_back
