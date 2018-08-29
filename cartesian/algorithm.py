@@ -57,7 +57,7 @@ def oneplus(
     best = seed or cls.create(random_state=random_state)
     best_res = return_opt_result(fun, best)
     nfev = best_res.nfev
-    res = OptimizeResult(expr=best, x=best_res.x, fun=best_res.fun, nit=0, nfev=nfev, success=False)
+    res = OptimizeResult(ind=best, x=best_res.x, fun=best_res.fun, nit=0, nfev=nfev, success=False, expr=str(best))
     if best_res.fun <= f_tol:
         res["success"] = True
         return res
