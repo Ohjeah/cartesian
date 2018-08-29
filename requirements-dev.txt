@@ -2,6 +2,7 @@
 -r requirements.txt
 pytest
 pytest-cov
+flaky
 hypothesis
 setuptools_scm
 setuptools_scm_git_archive

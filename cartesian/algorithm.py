@@ -7,7 +7,7 @@ from scipy.optimize import OptimizeResult, minimize
 
 from joblib import Parallel, delayed
 
-from .cgp import point_mutation, compile, to_polish, Constant
+from .cgp import active_gene_mutation, compile, to_polish, Constant
 
 
 def return_opt_result(f, individual):
@@ -63,13 +63,13 @@ def oneplus(
         return res
 
     for i in range(1, maxiter):
-        offspring = [point_mutation(best, random_state=random_state) for _ in range(lambda_)]
+        offspring = [active_gene_mutation(best, random_state=random_state) for _ in range(lambda_)]
         with Parallel(n_jobs=n_jobs) as parallel:
                 offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
-        offspring_fitness = [return_opt_result(fun, o) for o in offspring]
+        # offspring_fitness = [return_opt_result(fun, o) for o in offspring]
         best, best_res = min(zip(offspring + [best], offspring_fitness + [best_res]), key=lambda x: x[1].fun)
         nfev += sum(of.nfev for of in offspring_fitness)
-        res = OptimizeResult(expr=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False)
+        res = OptimizeResult(ind=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False, expr=str(best))
         if callback is not None:
             callback(res)
         if res.fun <= f_tol:

@@ -134,7 +134,7 @@ class Symbolic(BaseEstimator, RegressorMixin):
             seed=self.seeded_individual,
             callback=self.callback
         )
-        self.model = compile(self.res.expr)
+        self.model = compile(self.res.ind)
         return self
 
     def predict(self, x):

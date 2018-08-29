@@ -3,16 +3,19 @@ import pickle
 import sys
 import pathlib
 
+import flaky
 import numpy as np
 import pytest
 import hypothesis
 import hypothesis.strategies as s
 from hypothesis.strategies import integers, builds
 
-sys.path.append(pathlib.Path(__name__).parent.as_posix())
-from conftest import pset
 from cartesian.cgp import *
 from cartesian.cgp import _get_valid_inputs, _boilerplate
+
+sys.path.append(pathlib.Path(__name__).parent.as_posix())
+from conftest import pset
+
 
 
 def make_ind(random_state=None, **kwargs):
@@ -40,72 +43,78 @@ def test_PrimitiveSet(pset):
     assert pset.context[pset.operators[0].name] == operator.neg
 
 
-def test_Cartesian(individual):
-    x = np.ones((1, 2))
-    y = individual.fit_transform(x)
-    assert y == np.array([-1])
+class TestIndividual:
+    def test_active(self, individual):
+        assert individual.active_genes == {3, 4}
 
+    def test__out_idx(self, individual):
+        assert individual._out_idx == [4]
 
-def test_Cartesian_get(individual):
-    assert individual[0] == 0
-    assert individual[1] == 1
+    def test_copy(self, individual):
+        individual.memory[0] = 1
+        new = individual.clone()
+        with pytest.raises(KeyError):
+            new.memory[0]
+        assert new.code == individual.code
+        assert new.code is not individual.code
+        assert new.outputs == individual.outputs
+        assert new.outputs is not individual.outputs
 
+    def test_pickle(self, individual):
+        pickled = pickle.loads(pickle.dumps(individual))
+        for k in individual.__dict__.keys():
+            assert pickled.__dict__[k] == individual.__dict__[k]
 
-def test_Cartesian_set(individual):
-    n = len(individual)
-    individual[n - 1] = 1
-    assert individual.outputs[0] == 1
+    def test_fit_transform(self, individual):
+        x = np.ones((1, 2))
+        y = individual.fit_transform(x)
+        assert y == np.array([-1])
 
+    def test_get(self, individual):
+        assert individual[0] == 0
+        assert individual[1] == 1
 
-def test_to_polish(individual):
-    polish, used_arguments = to_polish(individual)
-    assert polish == ["neg(x_0)"]
-    assert len(used_arguments) == 1
+    def test_set(self, individual):
+        n = len(individual)
+        individual[n - 1] = 1
+        assert individual.outputs[0] == 1
 
+    def test_to_polish(self, individual):
+        polish, used_arguments = to_polish(individual)
+        assert polish == ["neg(x_0)"]
+        assert len(used_arguments) == 1
 
-def test_boilerplate(individual):
-    assert _boilerplate(individual) == "lambda x_0, x_1, c:"
-    assert _boilerplate(individual, used_arguments=[individual.pset.terminals[0]]) == "lambda x_0:"
+    def test_boilerplate(self, individual):
+        assert _boilerplate(individual) == "lambda x_0, x_1, c:"
+        assert _boilerplate(individual, used_arguments=[individual.pset.terminals[0]]) == "lambda x_0:"
 
-
-def test_compile(individual):
-    f = compile(individual)
-    assert f(1, 1) == -1
+    def test_compile(self, individual):
+        f = compile(individual)
+        assert f(1, 1) == -1
 
 
 @hypothesis.settings(max_examples=25)
 @hypothesis.given(ind_strat)
-def test_point_mutation(individual):
-    new_individual = point_mutation(individual)
-    assert new_individual.inputs is not individual.inputs
-    assert new_individual.inputs == individual.inputs
-    assert new_individual.code is not individual.code
-    assert new_individual.outputs is not individual.outputs
+def test_point_mutation(ind):
+    new_ind = point_mutation(ind)
+    assert new_ind.inputs is not ind.inputs
+    assert new_ind.inputs == ind.inputs
+    assert new_ind.code is not ind.code
+    assert new_ind.outputs is not ind.outputs
     changes = 0
-    if new_individual.outputs != individual.outputs:
+    if new_ind.outputs != ind.outputs:
         changes += 1
-    for c1, c2 in zip(individual.code, new_individual.code):
+    for c1, c2 in zip(ind.code, new_ind.code):
         for c11, c22 in zip(c1, c2):
             if c11 != c22:
                 changes += 1
     assert 0 <= changes <= 1
 
 
-def test_Cartesian_pickle(individual):
-    pickled = pickle.loads(pickle.dumps(individual))
-    for k in individual.__dict__.keys():
-        assert pickled.__dict__[k] == individual.__dict__[k]
-
-
-def test_Cartesian_copy(individual):
-    individual.memory[0] = 1
-    new = individual.clone()
-    with pytest.raises(KeyError):
-        new.memory[0]
-    assert new.code == individual.code
-    assert new.code is not individual.code
-    assert new.outputs == individual.outputs
-    assert new.outputs is not individual.outputs
+@flaky.flaky(50, 25)
+def test_active_gene_mutation(individual):
+    # active gene mutation can randomly produce the same individual again
+    assert str(individual) != str(active_gene_mutation(individual))
 
 
 def test_ephemeral_constant():
@@ -157,3 +166,4 @@ def test__get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
 def test__get_valid_inputs_edge_case():
     valid_inputs = _get_valid_inputs(1, 2, 1, 1, 1)
     assert valid_inputs == {0: [], 1: [0], 2: [0, 1], 3: [0, 1, 2]}
+

@@ -19,7 +19,7 @@ def individual(request):
     MyCartesian = Cartesian("MyCartesian", pset, n_columns=1)
     code = [[[3, 1]]]
     outputs = [3]
-    return MyCartesian(code, outputs)
+    return MyCartesian(code, outputs)    # y = -x0
 
 
 @pytest.fixture

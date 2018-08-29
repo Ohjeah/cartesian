@@ -28,4 +28,4 @@ res = oneplus(
 )
 print(res)
 print(to_polish(res.expr, return_args=False))
-print(type(res.expr))
+

@@ -205,19 +205,46 @@ class Base(TransformerMixin):
         """Helper dictionary to index the cartesian registers."""
         return {i: (el, c, r, l) for i, el, c, r, l in _make_map(self.inputs, *self.code, self.outputs)}
 
+    @property
+    def _out_idx(self):
+        """Returns the indices of the output genes in self"""
+        return [_out_index(self.n_rows, self.n_columns, self.n_inputs, o) for o in range(self.n_out)]
+
+    @property
+    def active_genes(self):
+        """Computes the set of active gene in an individual."""
+
+        active = set(self._out_idx)  # all output genes are always active
+
+        def h(g):
+            active.add(g)
+            gene = make_it(self[g])    # todo (mq): make this a method
+            primitive = self.pset.mapping[next(gene)]
+            for a, _ in zip(gene, range(primitive.arity)):
+                h(a)
+
+        for o in self.outputs:
+            h(o)
+
+        return active - set(self.inputs)
+
     def __getitem__(self, index):
         return self.mapping[index][0]
 
     def __setitem__(self, index, item):
-        el, c, r, lst = self.mapping[index]
-        lst[r] = item
+        # element, column, row, gene
+        *_, row, gene = self.mapping[index]
+        gene[row] = item
 
     def __len__(self):
-        """Returns the number of registers in self."""
+        """Returns the number of genes in self."""
         return self.n_columns * self.n_rows + self.n_out + self.n_inputs
 
-    def __repr__(self):
+    def __str__(self):
         return "\n".join(to_polish(self, return_args=False))
+
+    def __repr__(self):  # pragma: no cover
+        return f"{type(self)}\n\tInputs: {self.inputs}\n\tOutputs: {self.outputs}\n\tCode: {self.code}"
 
     def __getstate__(self):
         # for compatibility with vanilla pickle protocol
@@ -236,7 +263,7 @@ class Base(TransformerMixin):
         return copy.copy(self)
 
     @staticmethod
-    def format(x):
+    def format(x):  # pragma: no cover
         return "{}".format(x)
 
     def fit(self, x, y=None, **fit_params):
@@ -311,6 +338,56 @@ class Cartesian(type):
         super().__init__(name, (Base,), dct)
 
 
+def _point_mutation(individual, idx, random_state):
+    """Apply a point mutation on individual at position idx
+
+    Args:
+        individual: instance of Base
+        idx: index
+        random_state: an instance of np.random.RandomState
+
+    Returns:
+        mutated individual
+    """
+    el, c, r, lst = individual.mapping[idx]
+    gene = lst[r]
+
+    if isinstance(gene, list):
+        new_gene = gene[:]
+        j = random_state.randint(0, len(gene))
+        if j == 0:  # function
+            choices = individual.pset.operators[:]
+            if len(choices) > 1:
+                choices.pop(choices.index(gene[j]))
+            new_j = individual.pset.imapping[random_state.choice(choices)]
+        else:  # input
+            valid_inputs = individual._valid_inputs[idx][:]
+            if len(valid_inputs) > 1:
+                valid_inputs.pop(valid_inputs.index(gene[j]))
+            new_j = random_state.choice(valid_inputs)
+        new_gene[j] = new_j
+    else:  # output gene
+        new_gene = random_state.randint(0, len(individual) - individual.n_out - 1)
+    new_individual = copy.copy(individual)
+    new_individual[idx] = new_gene
+    return new_individual
+
+
+def active_gene_mutation(individual, random_state=None):
+    """Picks an active gene and
+
+    Args:
+        individual: instance of Base
+        random_state: an instance of np.random.RandomState, a seed integer or None
+
+    Returns:
+        mutated individual
+    """
+    random_state = check_random_state(random_state)
+    i = random_state.choice(list(individual.active_genes), 1)[0]
+    return _point_mutation(individual, i, random_state)
+
+
 def point_mutation(individual, random_state=None):
     """Picks a gene at random and mutates it.
 
@@ -322,26 +399,11 @@ def point_mutation(individual, random_state=None):
 
     Returns:
         mutated individual
-
     """
     random_state = check_random_state(random_state)
     n_terminals = len(individual.pset.terminals)
     i = random_state.randint(n_terminals, len(individual) - 1)
-    el, c, r, lst = individual.mapping[i]
-    gene = lst[r]
-    if isinstance(gene, list):
-        new_gene = gene[:]
-        j = random_state.randint(0, len(gene))
-        if j == 0:  # function
-            new_j = individual.pset.imapping[random_state.choice(individual.pset.operators)]
-        else:  # input
-            new_j = random_state.choice(individual._valid_inputs[i])
-        new_gene[j] = new_j
-    else:  # output gene
-        new_gene = random_state.randint(0, len(individual) - individual.n_out - 1)
-    new_individual = copy.copy(individual)
-    new_individual[i] = new_gene
-    return new_individual
+    return _point_mutation(individual, i, random_state)
 
 
 def to_polish(c, return_args=True):
@@ -351,7 +413,7 @@ def to_polish(c, return_args=True):
 
     Note:
        Function has side-effects on the individual c.
-       See Symbols for details
+       See Symbols for details.
 
     Args:
         c: instance of base
