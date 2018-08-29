@@ -26,7 +26,7 @@ def test_algorithm_twin_problem_with_seed(individual):
         return np.sum((y - f(*x.T, *consts)))
 
     res = oneplus(fun, seed=individual)
-    assert res.expr == individual
+    assert res.ind == individual
 
 
 def test_optimize(individual):
