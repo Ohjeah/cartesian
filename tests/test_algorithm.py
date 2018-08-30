@@ -1,5 +1,5 @@
-from sklearn.utils.validation import check_random_state
 import numpy as np
+from sklearn.utils.validation import check_random_state
 
 from cartesian.algorithm import *
 
@@ -23,7 +23,7 @@ def test_algorithm_twin_problem_with_seed(individual):
 
     @optimize_constants
     def fun(f, consts=()):
-        return np.sum((y - f(*x.T, *consts)))
+        return np.sum((y - f(*x.T, *consts)) ** 2)
 
     res = oneplus(fun, seed=individual)
     assert res.ind == individual

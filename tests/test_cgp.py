@@ -1,34 +1,36 @@
 import operator
+import pathlib
 import pickle
 import sys
-import pathlib
 
 import flaky
-import numpy as np
-import pytest
 import hypothesis
 import hypothesis.strategies as s
-from hypothesis.strategies import integers, builds
+import numpy as np
+import pytest
+from hypothesis.strategies import builds
+from hypothesis.strategies import integers
 
 from cartesian.cgp import *
-from cartesian.cgp import _get_valid_inputs, _boilerplate
+from cartesian.cgp import _boilerplate
+from cartesian.cgp import _get_valid_inputs
 
 sys.path.append(pathlib.Path(__name__).parent.as_posix())
 from conftest import pset
-
 
 
 def make_ind(random_state=None, **kwargs):
     return Cartesian(**kwargs).create(random_state=random_state)
 
 
-ind_strat = builds(make_ind,
-                   name=s.just("Individual"),
-                   primitive_set=s.just(pset()),
-                   n_columns=integers(min_value=1, max_value=10),
-                   n_rows=integers(min_value=1, max_value=10),
-                   n_back=integers(min_value=1, max_value=10),
-                   n_out=integers(min_value=1, max_value=5)
+ind_strat = builds(
+    make_ind,
+    name=s.just("Individual"),
+    primitive_set=s.just(pset()),
+    n_columns=integers(min_value=1, max_value=10),
+    n_rows=integers(min_value=1, max_value=10),
+    n_back=integers(min_value=1, max_value=10),
+    n_out=integers(min_value=1, max_value=5),
 )
 
 
@@ -93,22 +95,26 @@ class TestIndividual:
         assert f(1, 1) == -1
 
 
-@hypothesis.settings(max_examples=25)
-@hypothesis.given(ind_strat)
-def test_point_mutation(ind):
-    new_ind = point_mutation(ind)
-    assert new_ind.inputs is not ind.inputs
-    assert new_ind.inputs == ind.inputs
-    assert new_ind.code is not ind.code
-    assert new_ind.outputs is not ind.outputs
+def assert_different_individuals(old, new):
+    assert new.inputs is not old.inputs
+    assert new.inputs == old.inputs
+    assert new.code is not old.code
+    assert new.outputs is not old.outputs
     changes = 0
-    if new_ind.outputs != ind.outputs:
+    if new.outputs != old.outputs:
         changes += 1
-    for c1, c2 in zip(ind.code, new_ind.code):
-        for c11, c22 in zip(c1, c2):
-            if c11 != c22:
-                changes += 1
-    assert 0 <= changes <= 1
+    if old.code != new.code:
+        changes += 1
+    assert changes > 0
+
+
+@hypothesis.settings(max_examples=25)
+@hypothesis.given(ind_strat, s.data())
+def test_mutation(ind, data):
+    new_ind = mutate(
+        ind, n_mutations=data.draw(integers(5, 10)), method=data.draw(s.sampled_from(["active", "point"]))
+    )
+    assert_different_individuals(ind, new_ind)
 
 
 @flaky.flaky(50, 25)
@@ -166,4 +172,3 @@ def test__get_valid_inputs(n_rows, n_columns, n_back, n_inputs, n_out):
 def test__get_valid_inputs_edge_case():
     valid_inputs = _get_valid_inputs(1, 2, 1, 1, 1)
     assert valid_inputs == {0: [], 1: [0], 2: [0, 1], 3: [0, 1, 2]}
-

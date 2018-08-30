@@ -1,7 +1,8 @@
 import numpy as np
 from sklearn.utils.validation import check_random_state
 
-from cartesian.algorithm import oneplus, optimize_constants
+from cartesian.algorithm import oneplus
+from cartesian.algorithm import optimize_constants
 from cartesian.cgp import *
 
 primitives = [
@@ -21,12 +22,10 @@ y += 0.05 * rng.normal(size=y.shape)
 
 @optimize_constants
 def func(f, consts=()):
-    yhat = f(* x.T, *consts)
+    yhat = f(*x.T, *consts)
     return np.sqrt(np.mean((y - yhat) ** 2)) / (y.max() - y.min())
 
 
 MyCartesian = Cartesian("MyCartesian", pset, n_rows=2, n_columns=3, n_out=1, n_back=1)
-res = oneplus(
-    func, cls=MyCartesian, f_tol=0.01, random_state=rng, maxfev=50000, n_jobs=1
-)
+res = oneplus(func, cls=MyCartesian, f_tol=0.01, random_state=rng, maxfev=50000, n_jobs=1)
 print(res)

@@ -2,12 +2,16 @@ import math
 from functools import wraps
 
 import numpy as np
+from joblib import delayed
+from joblib import Parallel
+from scipy.optimize import minimize
+from scipy.optimize import OptimizeResult
 from sklearn.utils.validation import check_random_state
-from scipy.optimize import OptimizeResult, minimize
 
-from joblib import Parallel, delayed
-
-from .cgp import active_gene_mutation, compile, to_polish, Constant
+from .cgp import compile
+from .cgp import Constant
+from .cgp import mutate
+from .cgp import to_polish
 
 
 def return_opt_result(f, individual):
@@ -28,7 +32,18 @@ def return_opt_result(f, individual):
 
 
 def oneplus(
-    fun, random_state=None, cls=None, lambda_=4, maxiter=100, maxfev=None, f_tol=0, n_jobs=1, seed=None, callback=None
+    fun,
+    random_state=None,
+    cls=None,
+    lambda_=4,
+    n_mutations=1,
+    mutation_method="active",
+    maxiter=100,
+    maxfev=None,
+    f_tol=0,
+    n_jobs=1,
+    seed=None,
+    callback=None,
 ):
     """1 + lambda algorithm.
 
@@ -40,6 +55,8 @@ def oneplus(
         random_state: an instance of np.random.RandomState, a seed integer or None
         cls: base class for individuals
         lambda_: number of offspring per generation
+        n_mutations: number of mutations per offspring
+        mutation_method: specific mutation method
         maxiter: maximum number of generations
         maxfev: maximum number of function evaluations. Important, if fun is another optimizer
         f_tol: absolute error in metric(ind) between iterations that is acceptable for convergence
@@ -57,21 +74,33 @@ def oneplus(
     best = seed or cls.create(random_state=random_state)
     best_res = return_opt_result(fun, best)
     nfev = best_res.nfev
-    res = OptimizeResult(ind=best, x=best_res.x, fun=best_res.fun, nit=0, nfev=nfev, success=False, expr=str(best))
+    res = OptimizeResult(
+        ind=best, x=best_res.x, fun=best_res.fun, nit=0, nfev=nfev, success=False, expr=str(best)
+    )
     if best_res.fun <= f_tol:
         res["success"] = True
         return res
-
     for i in range(1, maxiter):
-        offspring = [active_gene_mutation(best, random_state=random_state) for _ in range(lambda_)]
+        offspring = [
+            mutate(best.clone(), n_mutations=n_mutations, method=mutation_method, random_state=random_state)
+            for _ in range(lambda_)
+        ]
         with Parallel(n_jobs=n_jobs) as parallel:
-                offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
+            offspring_fitness = parallel(delayed(return_opt_result)(fun, o) for o in offspring)
         # offspring_fitness = [return_opt_result(fun, o) for o in offspring]
+        # for off, fit in zip(offspring, offspring_fitness):
+        #     if fit.fun <= best_res.fun:
+        #         best = off
+        #         best_res = fit
         best, best_res = min(zip(offspring + [best], offspring_fitness + [best_res]), key=lambda x: x[1].fun)
         nfev += sum(of.nfev for of in offspring_fitness)
-        res = OptimizeResult(ind=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False, expr=str(best))
+        res = OptimizeResult(
+            ind=best, x=best_res.x, fun=best_res.fun, nit=i, nfev=nfev, success=False, expr=str(best)
+        )
+
         if callback is not None:
             callback(res)
+
         if res.fun <= f_tol:
             res["success"] = True
             return res

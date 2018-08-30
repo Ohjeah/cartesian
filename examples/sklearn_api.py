@@ -1,18 +1,15 @@
 import numpy as np
 from sklearn.datasets import make_regression
-from sklearn.utils.validation import check_random_state
 from sklearn.model_selection import train_test_split
-from cartesian import Symbolic, Primitive
+from sklearn.utils.validation import check_random_state
+
+from cartesian import Primitive
+from cartesian import Symbolic
 
 rng = check_random_state(1337)
-x, y, coef = make_regression(
-    n_features=2, n_informative=1, n_targets=1, random_state=rng, coef=True
-)
+x, y, coef = make_regression(n_features=2, n_informative=1, n_targets=1, random_state=rng, coef=True)
 
-primitives = [
-    Primitive("add", np.add, 2),
-    Primitive("mul", np.multiply, 2),
-]
+primitives = [Primitive("add", np.add, 2), Primitive("mul", np.multiply, 2)]
 
 
 def log(res):

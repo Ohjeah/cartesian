@@ -13,3 +13,4 @@ sphinx
 # sphinx_rtd_theme
 sphinx-readable-theme
 sphinxcontrib-apidoc
+pre-commit

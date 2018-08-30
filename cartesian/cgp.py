@@ -1,7 +1,7 @@
-import itertools
 import copy
-import sys
+import itertools
 import re
+import sys
 from operator import attrgetter
 
 from dataclasses import dataclass
@@ -112,6 +112,7 @@ class PrimitiveSet:
         symbols: all sybolic constants
 
     """
+
     operators: list
     terminals: list
     mapping: dict
@@ -218,7 +219,7 @@ class Base(TransformerMixin):
 
         def h(g):
             active.add(g)
-            gene = make_it(self[g])    # todo (mq): make this a method
+            gene = make_it(self[g])  # todo (mq): make this a method
             primitive = self.pset.mapping[next(gene)]
             for a, _ in zip(gene, range(primitive.arity)):
                 h(a)
@@ -256,10 +257,11 @@ class Base(TransformerMixin):
         return state
 
     def __copy__(self):
-        """save copy, discard memory to refresh random constants"""
-        return type(self)(self.code[:], self.outputs[:])
+        """Save copy, discard memory to refresh random constants"""
+        return type(self)([c[:] for c in self.code], self.outputs[:])
 
     def clone(self):
+        """Save copy, discard memory to refresh random constants"""
         return copy.copy(self)
 
     @staticmethod
@@ -363,7 +365,7 @@ def _point_mutation(individual, idx, random_state):
             new_j = individual.pset.imapping[random_state.choice(choices)]
         else:  # input
             valid_inputs = individual._valid_inputs[idx][:]
-            if len(valid_inputs) > 1: # don't allow the same inputs again
+            if len(valid_inputs) > 1:  # don't allow the same inputs again
                 valid_inputs.pop(valid_inputs.index(gene[j]))
             new_j = random_state.choice(valid_inputs)
         new_gene[j] = new_j
@@ -372,6 +374,27 @@ def _point_mutation(individual, idx, random_state):
     new_individual = individual.clone()
     new_individual[idx] = new_gene
     return new_individual
+
+
+def mutate(individual, n_mutations=1, method="active", random_state=None):
+    """Create offsprings by mutating an individual.
+
+    Args:
+        individual: instance of Base
+        n_mutations: number of mutations
+        method: specific mutation method
+        random_state: an instance of np.random.RandomState, a seed integer or None
+
+    Returns:
+        mutated individual
+
+    """
+    random_state = check_random_state(random_state)
+    mutate_ = active_gene_mutation if method == "active" else point_mutation
+    offspring = individual.clone()
+    for _ in range(n_mutations):
+        offspring = mutate_(offspring, random_state=random_state)
+    return offspring
 
 
 def active_gene_mutation(individual, random_state=None):

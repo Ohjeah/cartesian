@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def make_it(x):
     """Ensures that x is an iterator.
 

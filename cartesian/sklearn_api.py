@@ -1,10 +1,18 @@
 import numpy as np
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin
 from sklearn.metrics import mean_squared_error
-from sklearn.utils.validation import check_array, check_random_state
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_random_state
 
-from .cgp import PrimitiveSet, Symbol, Primitive, Constant, compile, Cartesian
-from .algorithm import oneplus, optimize
+from .algorithm import oneplus
+from .algorithm import optimize
+from .cgp import Cartesian
+from .cgp import compile
+from .cgp import Constant
+from .cgp import Primitive
+from .cgp import PrimitiveSet
+from .cgp import Symbol
 from .util import replace_nan
 
 DEFAULT_PRIMITIVES = [Primitive("add", np.add, 2), Primitive("mul", np.multiply, 2)]
@@ -22,8 +30,10 @@ def _ensure_1d(yhat, shape):
 class _Evaluate:  # ugly construct s.th. you can pickle it and use joblib
     def __init__(self, x, y, metric):
         """Wraps metric for optimization"""
-        self.n_samples, *out = y.shape
-        self.multi_output = True if out else False
+        self.n_samples, *n_out = y.shape
+        self.multi_output = False
+        if n_out and n_out[0] > 1:
+            self.multi_output = True
         self.x = x
         self.y = y
         self.metric = metric
@@ -48,6 +58,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
         n_rows=1,
         n_columns=3,
         n_back=1,
+        n_mutations=3,
+        mutation_method="active",
         maxiter=1000,
         maxfev=10000,
         lambda_=4,
@@ -70,6 +82,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
             n_rows: number of rows in the code block
             n_columns: number of columns in the code block
             n_back: number of rows to look back for connections
+            n_mutations: number of mutations per offspring
+            mutation_method: specific mutation method
             maxiter: maximum number of generations
             maxfev: maximum number of function evaluations. Important, if fun is another optimizer
             lambda_: number of offspring per generation
@@ -97,6 +111,8 @@ class Symbolic(BaseEstimator, RegressorMixin):
         self.metric = metric if metric is not None else mean_squared_error
         self.random_state = check_random_state(random_state)
         self.n_jobs = n_jobs
+        self.n_mutations = n_mutations
+        self.mutation_method = mutation_method
         self.seeded_individual = seeded_individual
         self.callback = callback
 
@@ -131,10 +147,12 @@ class Symbolic(BaseEstimator, RegressorMixin):
             lambda_=self.lambda_,
             maxiter=self.maxiter,
             maxfev=self.maxfev,
+            n_mutations=self.n_mutations,
+            mutation_method=self.mutation_method,
             f_tol=self.f_tol,
             n_jobs=self.n_jobs,
             seed=self.seeded_individual,
-            callback=self.callback
+            callback=self.callback,
         )
         self.model = compile(self.res.ind)
         return self
