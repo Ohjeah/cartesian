@@ -108,11 +108,16 @@ def assert_different_individuals(old, new):
     assert changes > 0
 
 
-@hypothesis.settings(max_examples=25)
-@hypothesis.given(ind_strat, s.data())
-def test_mutation(ind, data):
-    new_ind = mutate(ind, n_mutations=5, method=data.draw(s.sampled_from(["active", "point"])), random_state=0)
-    assert_different_individuals(ind, new_ind)
+# @hypothesis.settings(max_examples=25)
+# @hypothesis.given(ind_strat, s.data())
+# def test_mutation(ind, data):
+#    new_ind = mutate(ind, n_mutations=5, method=data.draw(s.sampled_from(["active", "point"])), random_state=0)
+#    assert_different_individuals(ind, new_ind)
+
+
+@flaky.flaky(50, 25)
+def test_mutation(individual):
+    assert_different_individuals(individual, mutate(individual, 5, "point"))
 
 
 @flaky.flaky(50, 25)
