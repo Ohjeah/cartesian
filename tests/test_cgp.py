@@ -111,9 +111,7 @@ def assert_different_individuals(old, new):
 @hypothesis.settings(max_examples=25)
 @hypothesis.given(ind_strat, s.data())
 def test_mutation(ind, data):
-    new_ind = mutate(
-        ind, n_mutations=data.draw(integers(5, 10)), method=data.draw(s.sampled_from(["active", "point"]))
-    )
+    new_ind = mutate(ind, n_mutations=5, method=data.draw(s.sampled_from(["active", "point"])), random_state=0)
     assert_different_individuals(ind, new_ind)
 
 
