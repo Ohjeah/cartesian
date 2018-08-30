@@ -8,7 +8,7 @@ setuptools_scm
 setuptools_scm_git_archive
 twine>=1.11.0rc1
 setuptools>=38.6.0
-sphinx
+sphinx!=1.7.8
 # alabaster
 # sphinx_rtd_theme
 sphinx-readable-theme
