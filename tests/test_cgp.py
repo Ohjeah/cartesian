@@ -94,6 +94,10 @@ class TestIndividual:
         f = compile(individual)
         assert f(1, 1) == -1
 
+    def test_len_subgraph(self, individual):
+        assert individual.len_subgraph(3) == 2  # function node
+        assert individual.len_subgraph(individual._out_idx[0]) == 3  # output node
+
 
 def assert_different_individuals(old, new):
     assert new.inputs is not old.inputs
@@ -142,16 +146,13 @@ def test_ephemeral_constant():
     assert ind1.memory == pickle.loads(pickle.dumps(ind1)).memory
 
 
-def test_structural_constant_cls(sc):
-    assert 0.5 == sc.function("x", "f(x)")
-
-
 def test_structural_constant_to_polish(sc):
     primitives = [Symbol("x_0"), sc]
     pset = PrimitiveSet.create(primitives)
     MyClass = Cartesian("MyClass", pset)
-    ind = MyClass([[[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]], [2])
-    assert to_polish(ind, return_args=False) == ["1.0"]
+    # SC(x, x), SC(x, SC(x, x))
+    ind = MyClass([[[1, 0, 0]], [[1, 0, 1]], [[1, 2, 1]]], [1, 2])
+    assert to_polish(ind, return_args=False) == ["1.0", "0.3333333333333333"]
 
 
 @hypothesis.given(

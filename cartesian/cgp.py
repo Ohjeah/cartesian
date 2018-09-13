@@ -66,36 +66,18 @@ class Ephemeral(Primitive):
 
 
 class Structural(Primitive):
-    def __init__(self, name, fun, arity):
+    def __init__(self, name, function, arity):
         """Structural constants are operators which take the graph representation of its arguments
             and convert it to a numeric value.
 
         Args:
             name: for text representation
-            fun:
+            function:
             arity:
         """
         self.name = name
-        self._function = fun
+        self.function = function
         self.arity = arity
-
-    def function(self, *args):
-        return self._function(*map(self.get_len, args))
-
-    @staticmethod
-    def get_len(expr, tokens="(,"):
-        """ Get the length of a tree by parsing its polish notation representation
-
-        Args:
-            expr: a formula in polish notation
-            tokens: symbols to split the expression at
-
-        Returns:
-            length of expr
-
-        """
-        regex = "|".join("\\{}".format(t) for t in tokens)
-        return len(re.split(regex, expr))
 
 
 @dataclass
@@ -211,21 +193,34 @@ class Base(TransformerMixin):
         """Returns the indices of the output genes in self"""
         return [_out_index(self.n_rows, self.n_columns, self.n_inputs, o) for o in range(self.n_out)]
 
+    def _decode_code_gene(self, idx):
+        gene = make_it(self[idx])
+        primitive = self.pset.mapping[next(gene)]
+        return primitive, gene
+
+    def _iter_subgraph(self, idx):
+        if idx in self._out_idx:
+            yield idx, None
+            yield from self._iter_subgraph(self[idx])
+        else:
+            primitive, args = self._decode_code_gene(idx)
+            yield idx, primitive
+            if args:
+                for a, _ in zip(args, range(primitive.arity)):
+                    yield from self._iter_subgraph(a)
+
+    def _map_reduce_subgraph(self, idx, f=lambda *x: x, agg=list):
+        return agg((f(*igp) for igp in self._iter_subgraph(idx)))
+
+    def len_subgraph(self, idx):
+        """Compute the length of the subgraph with head-node a idx."""
+        return self._map_reduce_subgraph(idx, agg=lambda x: len(list(x)))
+
     @property
     def active_genes(self):
         """Computes the set of active gene in an individual."""
-
-        active = set(self._out_idx)  # all output genes are always active
-
-        def h(g):
-            active.add(g)
-            gene = make_it(self[g])  # todo (mq): make this a method
-            primitive = self.pset.mapping[next(gene)]
-            for a, _ in zip(gene, range(primitive.arity)):
-                h(a)
-
-        for o in self.outputs:
-            h(o)
+        f = lambda i, p: i
+        active = active.union(*[set(self._map_reduce_subgraph(o, f=f)) for o in self.outputs])
 
         return active - set(self.inputs)
 
@@ -468,7 +463,9 @@ def to_polish(c, return_args=True):
                 return "{}()".format(primitive.name)
 
         elif isinstance(primitive, Structural):
-            return c.format(primitive.function(*[h(a) for a, _ in zip(gene, range(primitive.arity))]))
+            inputs = [c.len_subgraph(a) for a, _ in zip(gene, range(primitive.arity))]
+            fmt = c.format(primitive.function(*inputs))
+            return fmt
 
         else:
             return "{}({})".format(
