@@ -220,7 +220,7 @@ class Base(TransformerMixin):
     def active_genes(self):
         """Computes the set of active gene in an individual."""
         f = lambda i, p: i
-        active = active.union(*[set(self._map_reduce_subgraph(o, f=f)) for o in self.outputs])
+        active = set.union(*[set(self._map_reduce_subgraph(o, f=f)) for o in self.outputs])
 
         return active - set(self.inputs)
 
