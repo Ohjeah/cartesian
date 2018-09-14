@@ -182,6 +182,7 @@ class Base(TransformerMixin):
         self.outputs = outputs
         # Primitives are allowed to write their name values for storage
         self.memory = {}
+        self.__out_idx = None
 
     @property
     def mapping(self):
@@ -191,7 +192,11 @@ class Base(TransformerMixin):
     @property
     def _out_idx(self):
         """Returns the indices of the output genes in self"""
-        return [_out_index(self.n_rows, self.n_columns, self.n_inputs, o) for o in range(self.n_out)]
+        if self.__out_idx is None:
+            self.__out_idx = [
+                _out_index(self.n_rows, self.n_columns, self.n_inputs, o) for o in range(self.n_out)
+            ]
+        return self.__out_idx
 
     def _decode_code_gene(self, idx):
         gene = make_it(self[idx])
@@ -210,7 +215,7 @@ class Base(TransformerMixin):
                     yield from self._iter_subgraph(a)
 
     def _map_reduce_subgraph(self, idx, f=lambda *x: x, agg=list):
-        return agg((f(*igp) for igp in self._iter_subgraph(idx)))
+        return agg((f(*ip) for ip in self._iter_subgraph(idx)))
 
     def len_subgraph(self, idx):
         """Compute the length of the subgraph with head-node a idx."""
@@ -220,7 +225,7 @@ class Base(TransformerMixin):
     def active_genes(self):
         """Computes the set of active gene in an individual."""
         f = lambda i, p: i
-        active = set.union(*[set(self._map_reduce_subgraph(o, f=f)) for o in self.outputs])
+        active = set.union(*[self._map_reduce_subgraph(o, f=f, agg=set) for o in self._out_idx])
 
         return active - set(self.inputs)
 
