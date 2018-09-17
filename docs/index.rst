@@ -7,9 +7,9 @@ API Documentation
 -----------------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
-   Modules <api/modules>
+   API Documentation <api/modules>
 
 Indices and tables
 ------------------

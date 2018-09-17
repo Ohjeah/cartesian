@@ -1,6 +1,7 @@
+import datetime
 import os
 import sys
-import datetime
+
 import sphinx_readable_theme
 
 sys.path.insert(0, os.path.abspath("../"))
@@ -8,7 +9,6 @@ import cartesian
 
 
 project = "Cartesian"
-
 
 copyright = "{}, Markus Quade".format(datetime.datetime.now().year)
 author = "Markus Quade"
@@ -27,15 +27,13 @@ extensions = [
 
 
 html_sidebars = {
-    'index': [
-        'sidebarintro.html',
+    "index": ["sidebarintro.html"],
+    "**": [
+        "sidebarintro.html",
+        # 'localtoc.html',
+        # 'relations.html',
+        "searchbox.html",
     ],
-    '**': [
-        'sidebarintro.html',
-        'localtoc.html',
-        'relations.html',
-        'searchbox.html',
-    ]
 }
 
 apidoc_module_dir = "../cartesian"
@@ -48,9 +46,9 @@ autoclass_content = "init"
 
 language = None
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = ["_build"]
-#pygments_style = "sphinx"
+# pygments_style = "sphinx"
 
 add_module_names = True
 add_function_parentheses = False
@@ -76,5 +74,3 @@ html_context = {
     "badge_branch": "master",
     "pypi_project": project,
 }
-
-
