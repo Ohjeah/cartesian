@@ -10,7 +10,7 @@ twine>=1.11.0rc1
 setuptools>=38.6.0
 sphinx!=1.7.8
 # alabaster
-# sphinx_rtd_theme
-sphinx-readable-theme
+sphinx_rtd_theme
+# sphinx-readable-theme
 sphinxcontrib-apidoc
 pre-commit

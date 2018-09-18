@@ -2,8 +2,6 @@ import datetime
 import os
 import sys
 
-import sphinx_readable_theme
-
 sys.path.insert(0, os.path.abspath("../"))
 import cartesian
 
@@ -25,17 +23,6 @@ extensions = [
     "sphinx.ext.napoleon",
 ]
 
-
-html_sidebars = {
-    "index": ["sidebarintro.html"],
-    "**": [
-        "sidebarintro.html",
-        # 'localtoc.html',
-        # 'relations.html',
-        "searchbox.html",
-    ],
-}
-
 apidoc_module_dir = "../cartesian"
 apidoc_excluded_paths = ["tests"]
 
@@ -46,7 +33,13 @@ autoclass_content = "init"
 
 language = None
 
-templates_path = ["_templates"]
+html_static_path = ["static"]
+
+
+def setup(app):
+    app.add_stylesheet("custom.css")
+
+
 exclude_patterns = ["_build"]
 # pygments_style = "sphinx"
 
@@ -54,23 +47,9 @@ add_module_names = True
 add_function_parentheses = False
 todo_include_todos = True
 
-html_theme_path = [sphinx_readable_theme.get_html_theme_path()]
-html_theme = "readable"
+html_theme = "sphinx_rtd_theme"
 html_show_sourcelink = False
 html_show_sphinx = False
 html_show_copyright = True
 
 default_role = "any"
-
-
-# for sidebarintro.html
-html_context = {
-    "github_user": "ohjeah",
-    "github_repo": project.lower(),
-    "github_button": True,
-    "github_banner": True,
-    "github_type": "star",
-    "github_count": True,
-    "badge_branch": "master",
-    "pypi_project": project,
-}

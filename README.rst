@@ -16,7 +16,7 @@ The basic components are provided:
  - symbolic, ephemeral random and structure-based constants
 
 Installation
-------------
+~~~~~~~~~~~~
 
 cartesian is available on PyPI
 
