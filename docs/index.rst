@@ -16,10 +16,3 @@ Overview
    cartesian @ GitHub <https://github.com/ohjeah/cartesian>
    cartesian @ PyPI <https://pypi.org/project/cartesian/>
    Issue Tracker <https://github.com/ohjeah/cartesian/issues>
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
