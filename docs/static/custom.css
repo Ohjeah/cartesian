@@ -3,7 +3,7 @@
   font-size: 85%;
 }
 
-.wy-nav-side, div.wy-side-nav-search {
+.wy-nav-side, div.wy-side-nav-search, .wy-nav-top, div.wy-nav-top {
   background: #343131;
 }
 
