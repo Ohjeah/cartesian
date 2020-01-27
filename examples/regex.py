@@ -1,4 +1,5 @@
 import re
+import random
 from cartesian.cgp import *
 from cartesian.algorithm import oneplus
 
@@ -49,14 +50,19 @@ def compile(program):
     return re.compile(stack[-1])
 
 
-data = ["a", "aa", "aba", "aaaa", "aaaaa", "aca"]
+data = {
+    k: -1 if "aba" in k else 1
+    for k in map(lambda x: "".join(random.sample("aaaaabbbbb", k=random.randint(1, 7))), range(20))
+}
+
+print(data, sum(v for v in data.values() if v == -1))
 
 
 def evaluate(program):
     regex = compile(program)
-    return 1 / (1 + sum(1 for x in data if re.match(regex, "".join(reversed(x)))))
+    return sum(v for k, v in data.items() if re.match(regex, k))
 
 
-res = oneplus(evaluate, cls=MyCartesian, maxiter=10, n_jobs=1)
+res = oneplus(evaluate, cls=MyCartesian, maxiter=10000, n_jobs=1, f_tol=-1000000)
 print(res)
 print(compile(res.ind))
