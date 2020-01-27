@@ -38,7 +38,6 @@ def test_optimize(individual):
 
     @optimize_constants
     def fun(f, consts=()):
-        print(np.sum((f(*x.T, consts)) ** 2))
         return np.sum((f(*x.T, consts)) ** 2)
 
     res = fun(ind)
