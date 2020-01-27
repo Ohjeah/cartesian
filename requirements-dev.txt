@@ -2,6 +2,7 @@
 -r requirements.txt
 pytest
 pytest-cov
+pytest-lazy-fixture
 flaky
 hypothesis
 setuptools_scm

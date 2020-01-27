@@ -15,9 +15,6 @@ from cartesian.cgp import *
 from cartesian.cgp import _boilerplate
 from cartesian.cgp import _get_valid_inputs
 
-sys.path.append(pathlib.Path(__name__).parent.as_posix())
-from conftest import pset
-
 
 def make_ind(random_state=None, **kwargs):
     return Cartesian(**kwargs).create(random_state=random_state)
@@ -26,7 +23,7 @@ def make_ind(random_state=None, **kwargs):
 ind_strat = builds(
     make_ind,
     name=s.just("Individual"),
-    primitive_set=s.just(pset()),
+    primitive_set=s.just(pytest.lazy_fixture("pset")),
     n_columns=integers(min_value=1, max_value=10),
     n_rows=integers(min_value=1, max_value=10),
     n_back=integers(min_value=1, max_value=10),

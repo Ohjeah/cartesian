@@ -13,9 +13,9 @@ def pset():
     return pset
 
 
-@pytest.fixture(params=[pset])
+@pytest.fixture()
 def individual(request):
-    pset = request.param()
+    pset = request.getfixturevalue("pset")
     MyCartesian = Cartesian("MyCartesian", pset, n_columns=1)
     code = [[[3, 1]]]
     outputs = [3]

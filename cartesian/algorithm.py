@@ -130,7 +130,7 @@ def optimize(fun, individual):
     expr, args = to_polish(individual, return_args=True)
     constants = [a for a in args if isinstance(a, Constant)]
     if constants:
-        res = minimize(h, np.ones_like(constants))
+        res = minimize(h, np.ones_like(constants), method="Nelder-Mead")
         individual.consts = res.x
         return res
     else:
